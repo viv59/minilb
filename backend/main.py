@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from core.load_balancer import LoadBalancer
 from models.server import Server
+from core.logger import logger
+import httpx
 
 app = FastAPI(
     title="Custom Load Balancer",
@@ -53,10 +55,14 @@ def get_servers():
 
 
 @app.get("/route")
-def route_request():
+async def route_request():
+
     server = lb.get_next_server()
 
-    return {
-        "selected_server": server.name,
-        "url": server.url
-    }
+    async with httpx.AsyncClient() as client:
+
+        response = await client.get(
+            f"{server.url}/"
+        )
+        print("response",response.json())
+        return response.json()
