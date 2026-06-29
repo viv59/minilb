@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 from core.load_balancer import LoadBalancer
-from models.server import Server
 from core.logger import logger
-import httpx
+# import httpx
+from database.database import Base,engine
+from api.routes.server import router as server_router
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Custom Load Balancer",
@@ -10,59 +13,61 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Initialize Load Balancer
-lb = LoadBalancer()
+app.include_router(server_router)
 
-# Register sample servers
-lb.add_server(
-    Server(
-        id=1,
-        name="backend-1",
-        url="http://localhost:8001"
-    )
-)
+# # Initialize Load Balancer
+# lb = LoadBalancer()
 
-lb.add_server(
-    Server(
-        id=2,
-        name="backend-2",
-        url="http://localhost:8002"
-    )
-)
+# # Register sample servers
+# lb.add_server(
+#     Server(
+#         id=1,
+#         name="backend-1",
+#         url="http://localhost:8001"
+#     )
+# )
 
-lb.add_server(
-    Server(
-        id=3,
-        name="backend-3",
-        url="http://localhost:8003"
-    )
-)
+# lb.add_server(
+#     Server(
+#         id=2,
+#         name="backend-2",
+#         url="http://localhost:8002"
+#     )
+# )
 
-
-@app.get("/")
-def root():
-    return {
-        "application": "Custom Load Balancer",
-        "status": "running"
-    }
+# lb.add_server(
+#     Server(
+#         id=3,
+#         name="backend-3",
+#         url="http://localhost:8003"
+#     )
+# )
 
 
-@app.get("/servers")
-def get_servers():
-    return {
-        "servers": lb.servers
-    }
+# @app.get("/")
+# def root():
+#     return {
+#         "application": "Custom Load Balancer",
+#         "status": "running"
+#     }
 
 
-@app.get("/route")
-async def route_request():
+# @app.get("/servers")
+# def get_servers():
+#     return {
+#         "servers": lb.servers
+#     }
 
-    server = lb.get_next_server()
 
-    async with httpx.AsyncClient() as client:
+# @app.get("/route")
+# async def route_request():
 
-        response = await client.get(
-            f"{server.url}/"
-        )
-        print("response",response.json())
-        return response.json()
+#     server = lb.get_next_server()
+
+#     async with httpx.AsyncClient() as client:
+
+#         response = await client.get(
+#             f"{server.url}/"
+#         )
+#         print("response",response.json())
+#         return response.json()

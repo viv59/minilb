@@ -135,6 +135,7 @@ celerybeat.pid
 *.rdb
 *.aof
 *.pid
+*.db
 
 # RabbitMQ
 mnesia/
@@ -217,3 +218,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+Note/
+
+start_servers.ps1
