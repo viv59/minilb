@@ -74,3 +74,21 @@ def update_server(server_id: int, server: ServerUpdate, db: Session = Depends(ge
         "message": "Server updated successfully",
         "server": db_server
     }
+
+@router.delete("/{server_id}")
+def delete_server(server_id: int, db: Session = Depends(get_db)):
+
+    # Can use soft delete??
+    server = db.query(Server).filter(Server.id == server_id).first()
+
+    if not server:
+        return {"message": "Server not found"}
+    
+    db.delete(server)
+    db.commit()
+
+    logger.info(f"Server with server id {server_id} deleted successfully")
+
+    return {
+        "message": "Server deleted successfully"
+    }
