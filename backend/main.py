@@ -5,6 +5,8 @@ from core.logger import logger
 from database.database import Base,engine
 from api.routes.server import router as server_router
 
+from fastapi.middleware.cors import CORSMiddleware
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -14,6 +16,7 @@ app = FastAPI(
 )
 
 app.include_router(server_router)
+app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173"], allow_methods=["*"], allow_headers=["*"])
 
 # # Initialize Load Balancer
 # lb = LoadBalancer()

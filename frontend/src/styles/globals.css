@@ -1,0 +1,13 @@
+@import './variables.css';
+@import './animations.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: var(--color-bg);
+  background-image: radial-gradient(circle at 20% 15%, rgba(124, 92, 255, 0.08), transparent 40%),
+    radial-gradient(circle at 80% 30%, rgba(79, 209, 255, 0.06), transparent 40%);
+  font-family: 'Inter', system-ui, sans-serif;
+}

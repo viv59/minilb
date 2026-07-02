@@ -60,7 +60,8 @@ def update_server(server_id: int, server: ServerUpdate, db: Session = Depends(ge
             "message": "Server not found"
         }
     
-    update_data = server.model_dump(exclude_unset=True)
+    # update_data = server.model_dump(exclude_unset=True)
+    update_data = server.dict(exclude_unset=True)
 
     for key, value in update_data.items():
         setattr(db_server, key, value)

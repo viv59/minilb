@@ -1,0 +1,13 @@
+:root {
+  --color-bg: #0a0c17;
+  --color-panel: #12152a;
+  --color-border: #242848;
+  --color-border-soft: #1b1e38;
+  --color-text: #e7e9f7;
+  --color-text-dim: #8a8fb3;
+  --color-text-faint: #5b5f82;
+  --color-accent-1: #7c5cff;
+  --color-accent-2: #4fd1ff;
+  --color-green: #34d399;
+  --color-red: #f87171;
+}
