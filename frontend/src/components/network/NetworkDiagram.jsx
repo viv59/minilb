@@ -1,81 +1,123 @@
-import { useState } from 'react'
-import { Globe, ZoomIn, ZoomOut, MousePointer2, Hand, Maximize } from 'lucide-react'
-import InfiniteGrid from './InfiniteGrid.jsx'
-import ConnectionLine from './ConnectionLine.jsx'
-import LoadBalancerNode from './LoadBalancerNode.jsx'
-import ServerNode from './ServerNode.jsx'
-import { useServers } from '../../hooks/useServers.js'
-import { useServerUI } from '../../context/ServerContext.jsx'
-
-// Curve from the load balancer box to server node i. Kept as a pure
-// function of index so the layout stays correct as servers are added/removed.
-function serverPath(i) {
-  const startX = 370, startY = 280
-  const endX = 420, endY = 60 + i * 130 + 34
-  const midX = (startX + endX) / 2
-  return `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`
-}
+// src/components/network/NetworkDiagram.jsx
+import { useLayoutEffect, useRef, useState } from "react";
+import { Globe } from "lucide-react";
+import InfiniteGrid from "./InfiniteGrid.jsx";
+import ConnectionLine from "./ConnectionLine.jsx";
+import LoadBalancerNode from "./LoadBalancerNode.jsx";
+import ServerNode from "./ServerNode.jsx";
+import { useServers } from "../../hooks/useServers.js";
+import { useServerUI } from "../../context/ServerContext.jsx";
 
 export default function NetworkDiagram() {
-  const { servers } = useServers()
-  const { selectedId, setSelectedId } = useServerUI()
-  const [zoom, setZoom] = useState(1)
+    const { servers } = useServers();
+    const { selectedId, setSelectedId } = useServerUI();
 
-  return (
-    <div className="relative min-h-[560px] overflow-hidden rounded-2xl border border-app-border-soft bg-app-panel p-6">
-      <InfiniteGrid />
+    const containerRef = useRef(null);
+    const lbRef = useRef(null);
+    const serverRefs = useRef({});
 
-      <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}>
-        <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 620 560" preserveAspectRatio="none">
-          <ConnectionLine d="M 140 280 C 190 280, 190 280, 235 280" />
-          {servers.map((s, i) => (
-            <ConnectionLine key={s.id} d={serverPath(i)} />
-          ))}
-        </svg>
+    const [size, setSize] = useState({ width: 0, height: 0 });
+    const [paths, setPaths] = useState([]);
 
+    function measure() {
+        const container = containerRef.current;
+        const lb = lbRef.current;
+        if (!container || !lb) return;
+
+        const containerBox = container.getBoundingClientRect();
+        const lbBox = lb.getBoundingClientRect();
+
+        const startX = lbBox.right - containerBox.left;
+        const startY = lbBox.top + lbBox.height / 2 - containerBox.top;
+
+        const nextPaths = servers
+            .filter((s) => s.status)
+            .map((s) => {
+                const el = serverRefs.current[s.id];
+                if (!el) return null;
+                const box = el.getBoundingClientRect();
+                const endX = box.left - containerBox.left;
+                const endY = box.top + box.height / 2 - containerBox.top;
+                const midX = (startX + endX) / 2;
+                return {
+                    id: s.id,
+                    d: `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`,
+                };
+            })
+            .filter(Boolean);
+
+        setPaths(nextPaths);
+        setSize({ width: containerBox.width, height: containerBox.height });
+    }
+
+    useLayoutEffect(() => {
+        measure();
+        const ro = new ResizeObserver(measure);
+        if (containerRef.current) ro.observe(containerRef.current);
+        window.addEventListener("resize", measure);
+        return () => {
+            ro.disconnect();
+            window.removeEventListener("resize", measure);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [servers.length]);
+
+    return (
         <div
-          className="absolute flex h-24 w-24 flex-col items-center justify-center rounded-full border border-accent1/70 bg-accent1/10 text-center text-xs font-semibold shadow-[0_0_30px_-6px_#7c5cff55]"
-          style={{ left: 10, top: 232 }}
+            ref={containerRef}
+            className="relative overflow-hidden rounded-2xl border border-app-border-soft bg-app-panel p-10"
         >
-          <Globe size={20} className="mb-1" />
-          Incoming
-          <br />
-          Traffic
+            <InfiniteGrid />
+
+            <svg
+                className="pointer-events-none absolute inset-0 h-full w-full"
+                viewBox={`0 0 ${size.width || 1} ${size.height || 1}`}
+                preserveAspectRatio="none"
+            >
+                {paths.map((p) => (
+                    <path
+                        key={p.id}
+                        d={p.d}
+                        fill="none"
+                        stroke="#ffffff30"
+                        strokeWidth="1.6"
+                        strokeDasharray="2 6"
+                        strokeLinecap="round"
+                        className="animate-dash"
+                    />
+                ))}
+            </svg>
+
+            <div className="relative grid grid-cols-1 items-center justify-items-center gap-6 md:grid-cols-[auto_1fr_auto_1fr_auto] md:justify-items-stretch">
+                <div className="flex aspect-square flex-shrink-0 flex-col items-center justify-center gap-1 rounded-full border border-accent1/70 bg-accent1/10 p-6 text-center text-xs font-semibold shadow-lg shadow-accent1/30">
+                    <Globe className="h-5 w-5" />
+                    Incoming
+                    <br />
+                    Traffic
+                </div>
+
+                <ConnectionLine className="hidden md:block" />
+
+                <div ref={lbRef} className="flex flex-shrink-0 justify-self-center pr-6">
+                    <LoadBalancerNode />
+                </div>
+
+                <div className="hidden md:block" />
+
+                <div className="flex flex-shrink-0 flex-col items-center gap-3 justify-self-center md:justify-self-end pl-3">
+                    {servers.map((s) => (
+                        <ServerNode
+                            key={s.id}
+                            ref={(el) => {
+                                serverRefs.current[s.id] = el;
+                            }}
+                            server={s}
+                            selected={s.id === selectedId}
+                            onSelect={setSelectedId}
+                        />
+                    ))}
+                </div>
+            </div>
         </div>
-
-        <LoadBalancerNode />
-
-        {servers.map((s, i) => (
-          <ServerNode key={s.id} server={s} index={i} selected={s.id === selectedId} onSelect={setSelectedId} />
-        ))}
-      </div>
-
-      <div className="absolute bottom-6 left-6 flex gap-1.5 rounded-lg border border-app-border-soft bg-app-panel p-1.5">
-        <button className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-accent1 to-[#5a3fe0] text-white">
-          <MousePointer2 size={15} />
-        </button>
-        <button className="flex h-8 w-8 items-center justify-center rounded-md text-text-dim hover:text-white">
-          <Hand size={15} />
-        </button>
-        <button
-          onClick={() => setZoom((z) => Math.min(z + 0.1, 2))}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-text-dim hover:text-white"
-        >
-          <ZoomIn size={15} />
-        </button>
-        <button
-          onClick={() => setZoom((z) => Math.max(z - 0.1, 0.5))}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-text-dim hover:text-white"
-        >
-          <ZoomOut size={15} />
-        </button>
-        <button
-          onClick={() => setZoom(1)}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-text-dim hover:text-white"
-        >
-          <Maximize size={15} />
-        </button>
-      </div>
-    </div>
-  )
+    );
 }

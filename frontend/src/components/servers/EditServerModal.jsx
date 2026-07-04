@@ -36,7 +36,7 @@ export default function EditServerModal() {
 
   return (
     <Modal open={open} title={`Edit ${server.name}`} onClose={closeModal}>
-      <form onSubmit={handleSubmit} className="space-y-3.5">
+      <form onSubmit={handleSubmit} className="space-y-3.5 text-text-dim">
         <Field label="Name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
         <Field label="IP Address" value={form.ip} onChange={(v) => setForm({ ...form, ip: v })} />
         <Field label="Port" value={form.port} onChange={(v) => setForm({ ...form, port: v })} type="number" />

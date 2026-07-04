@@ -11,11 +11,11 @@ export default function TopBar() {
         System Status
         <div className="text-[13px] font-semibold text-status-green">Healthy</div>
       </div>
-      <Button onClick={openAddModal} className="flex items-center gap-1.5">
+      {/* <Button onClick={openAddModal} className="flex items-center gap-1.5">
         <Plus size={15} /> Add Server
-      </Button>
+      </Button> */}
       <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-app-border-soft bg-app-panel text-xs font-bold text-text-dim">
-        AD
+        VG
       </div>
     </div>
   )

@@ -33,25 +33,28 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="grid grid-cols-[280px_1fr_320px] gap-5 max-[1200px]:grid-cols-1">
-      <div className="flex flex-col gap-5">
+    // <div className="grid grid-cols-[280px_1fr_320px] gap-5 max-[1200px]:grid-cols-1">
+    <div className="">
+      {/* <div className="flex flex-col gap-5">
         <LiveTrafficCard />
         <ServerStats />
-      </div>
+      </div> */}
 
       <NetworkDiagram />
 
-      <div className="flex flex-col gap-5">
+      {/* <div className="flex flex-col gap-5">
         <ServerDetailPanel />
         <TrafficDonut />
-      </div>
+      </div> */}
 
-      <div className="col-span-2 max-[1200px]:col-span-1">
+      {/* <div className="col-span-2 max-[1200px]:col-span-1">
         <ServersTable />
-      </div>
+      </div> */}
 
-      <AddServerModal />
-      <EditServerModal />
+      {/* <AddServerModal />
+      <EditServerModal /> */}
+
+      {/* <NetworkDiagram /> */}
     </div>
   )
 }

@@ -18,7 +18,8 @@ function normalizeServer(raw) {
     reqMin: raw.reqMin ?? raw.req_per_min ?? raw.requests_per_minute ?? 0,
     uptime: raw.uptime ?? '',
     created: raw.created ?? raw.created_at ?? '',
-    url: raw.url
+    url: raw.url ?? '',
+    weight: raw.weight ?? 1
   }
 }
 

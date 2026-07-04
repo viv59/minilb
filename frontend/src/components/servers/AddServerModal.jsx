@@ -7,7 +7,7 @@ import { useServerUI } from '../../context/ServerContext.jsx'
 export default function AddServerModal() {
   const { addServer } = useServers()
   const { modal, closeModal } = useServerUI()
-  const [form, setForm] = useState({ name: '', ip: '', port: '', cpu: '', memory: '' })
+  const [form, setForm] = useState({ name: '', ip: '', port: '', cpu: '', memory: '', weight: '' })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
 
@@ -24,7 +24,8 @@ export default function AddServerModal() {
         ip: form.ip,
         port: form.port ? Number(form.port) : undefined,
         cpu: form.cpu,
-        memory: form.memory
+        memory: form.memory,
+        weight: form.weight ? Number(form.weight) : 1
       })
       setForm({ name: '', ip: '', port: '' })
       closeModal()
@@ -37,12 +38,13 @@ export default function AddServerModal() {
 
   return (
     <Modal open={open} title="Add Server" onClose={closeModal}>
-      <form onSubmit={handleSubmit} className="space-y-3.5">
+      <form onSubmit={handleSubmit} className="space-y-3.5 text-text-dim">
         <Field label="Name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
         <Field label="IP Address" value={form.ip} onChange={(v) => setForm({ ...form, ip: v })} />
         <Field label="Port" value={form.port} onChange={(v) => setForm({ ...form, port: v })} type="number" />
         <Field label="CPU" value={form.cpu} onChange={(v) => setForm({ ...form, cpu: v })} type="number" />
         <Field label="Memory" value={form.memory} onChange={(v) => setForm({ ...form, memory: v })} />
+        <Field label="Weight" value={form.weight} onChange={(v) => setForm({ ...form, weight: v})} type="number"/>
         {error && <p className="text-xs text-status-red">{error}</p>}
         <div className="flex gap-2.5 pt-2">
           <Button type="button" variant="outline" className="flex-1" onClick={closeModal}>
