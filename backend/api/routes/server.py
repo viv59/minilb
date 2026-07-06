@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from database.database import get_db
@@ -6,8 +6,11 @@ from models.db_model import Server
 from models.schema import ServerCreate, ServerUpdate
 
 from core.logger import logger
+from core.load_balancer import LoadBalancer, build_runtime_servers
 
 router = APIRouter(prefix="/servers", tags=["Servers"])
+
+load_balancer = LoadBalancer()
 
 @router.post("/")
 def create_server(server: ServerCreate, db: Session = Depends(get_db)):
@@ -92,4 +95,20 @@ def delete_server(server_id: int, db: Session = Depends(get_db)):
 
     return {
         "message": "Server deleted successfully"
+    }
+
+@router.post("/route-request")
+def route_request(db: Session = Depends(get_db)):
+    db_servers = db.query(Server).filter(Server.status == True).all()  # noqa: E712
+    runtime_servers = build_runtime_servers(db_servers)
+    load_balancer.set_servers(runtime_servers)
+    server = load_balancer.get_next_server()
+
+    if server is None:
+        logger.info("No healthy servers available for routing")
+        raise HTTPException(status_code=404, detail="No healthy servers available")
+
+    return {
+        "selected_server": server.name,
+        "server_id": server.id
     }

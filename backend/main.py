@@ -4,6 +4,7 @@ from core.logger import logger
 # import httpx
 from database.database import Base,engine
 from api.routes.server import router as server_router
+from api.routes.simulation import router as simulation_router
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -15,8 +16,21 @@ app = FastAPI(
     version="1.0.0"
 )
 
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # tighten this for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(server_router)
-app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173"], allow_methods=["*"], allow_headers=["*"])
+app.include_router(simulation_router)
+
+@app.get("/")
+def root():
+    return {"message": "minilb backend is running..."}
 
 # # Initialize Load Balancer
 # lb = LoadBalancer()

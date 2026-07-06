@@ -222,3 +222,7 @@ __marimo__/
 Note/
 
 start_servers.ps1
+
+test_ws.py
+
+test.json
