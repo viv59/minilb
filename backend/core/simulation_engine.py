@@ -5,6 +5,7 @@ import time
 from core.load_balancer import LoadBalancer, RuntimeServer
 from core.websocket_manager import WebSocketManager
 
+from core.logger import logger
 
 class SimulationEngine:
     """
@@ -94,11 +95,14 @@ class SimulationEngine:
             await self.ws_manager.broadcast(self.simulation_id, {
                 "event": "request_routed",
                 "request_id": request_id,
+                "server_id": server.id if server else None,
                 "server_name": server.name if server else None,
                 "wave": wave["wave"],
                 "distribution": self.distribution,
                 "total_processed": self.total_processed,
             })
+
+            # logger.info(f"{request_id} | {server.name}")
 
             await asyncio.sleep(wave["interval_ms"] / 1000)
 

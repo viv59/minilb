@@ -7,10 +7,48 @@ import LoadBalancerNode from "./LoadBalancerNode.jsx";
 import ServerNode from "./ServerNode.jsx";
 import { useServers } from "../../hooks/useServers.js";
 import { useServerUI } from "../../context/ServerContext.jsx";
+import { useSimulation } from "../../hooks/useSimulation.js";
+
+function normalizeValue(value) {
+    return String(value ?? "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "");
+}
+
+function findServerId(servers, serverName) {
+    const direct = servers.find(
+        (s) => s.name === serverName || s.id === serverName,
+    );
+    if (direct) return direct.id;
+
+    const num = serverName?.match(/(\d+)/)?.[1];
+    if (num) {
+        const idx = Number(num) - 1;
+        return servers[idx]?.id ?? null;
+    }
+    return null;
+}
+
+function getHandledRequests(server, distribution) {
+    if (!distribution || typeof distribution !== "object") return null;
+
+    const directKeys = [server.name, server.id, String(server.id)];
+    for (const key of directKeys) {
+        if (distribution[key] !== undefined) return distribution[key];
+    }
+
+    const normalizedServerName = normalizeValue(server.name);
+    const match = Object.keys(distribution).find(
+        (key) => normalizeValue(key) === normalizedServerName,
+    );
+
+    return match !== undefined ? distribution[match] : null;
+}
 
 export default function NetworkDiagram() {
     const { servers } = useServers();
     const { selectedId, setSelectedId } = useServerUI();
+    const { distribution } = useSimulation();
 
     const containerRef = useRef(null);
     const lbRef = useRef(null);
@@ -98,7 +136,10 @@ export default function NetworkDiagram() {
 
                 <ConnectionLine className="hidden md:block" />
 
-                <div ref={lbRef} className="flex flex-shrink-0 justify-self-center pr-6">
+                <div
+                    ref={lbRef}
+                    className="flex flex-shrink-0 justify-self-center pr-6"
+                >
                     <LoadBalancerNode />
                 </div>
 
@@ -113,6 +154,10 @@ export default function NetworkDiagram() {
                             }}
                             server={s}
                             selected={s.id === selectedId}
+                            handledRequests={getHandledRequests(
+                                s,
+                                distribution,
+                            )}
                             onSelect={setSelectedId}
                         />
                     ))}

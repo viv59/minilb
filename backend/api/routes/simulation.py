@@ -1,6 +1,7 @@
 import asyncio
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from core.load_balancer import build_runtime_servers
@@ -95,6 +96,15 @@ def stop_simulation(sim_id: int):
 
     engine.cancel()
     return {"message": "Stop signal sent"}
+
+
+@router.delete("/")
+def delete_all_simulations(db: Session = Depends(get_db)):
+    deleted_count = db.query(Simulation).count()
+    db.query(Simulation).delete(synchronize_session=False)
+    db.commit()
+
+    return {"message": "All simulations deleted", "deleted_count": deleted_count}
 
 
 @router.websocket("/ws/{sim_id}")

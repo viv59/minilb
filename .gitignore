@@ -226,3 +226,5 @@ start_servers.ps1
 test_ws.py
 
 test.json
+
+simulation_api_format.txt

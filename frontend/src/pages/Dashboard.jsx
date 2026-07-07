@@ -6,6 +6,8 @@ import ServerDetailPanel from '../components/servers/ServerDetailPanel.jsx'
 import ServersTable from '../components/servers/ServersTable.jsx'
 import AddServerModal from '../components/servers/AddServerModal.jsx'
 import EditServerModal from '../components/servers/EditServerModal.jsx'
+import SimulationControls from '../components/simulation/SimulationControls.jsx'
+import WaveProgress from '../components/simulation/WaveProgress.jsx'
 import Loader from '../components/common/Loader.jsx'
 import { useServers } from '../hooks/useServers.js'
 
@@ -39,7 +41,8 @@ export default function Dashboard() {
         <LiveTrafficCard />
         <ServerStats />
       </div> */}
-
+      <SimulationControls />
+      <WaveProgress />
       <NetworkDiagram />
 
       {/* <div className="flex flex-col gap-5">
