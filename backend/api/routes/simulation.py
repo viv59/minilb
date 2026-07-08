@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from core.load_balancer import build_runtime_servers
 from core.simulation_engine import SimulationEngine
+from core.simulation_logger import get_simulation_log_content, delete_simulation_log
 from core.websocket_manager import WebSocketManager
 from database.database import SessionLocal, get_db
 from models.db_model import Server, Simulation, SimulationStatus
@@ -96,6 +97,30 @@ def stop_simulation(sim_id: int):
 
     engine.cancel()
     return {"message": "Stop signal sent"}
+
+
+@router.get("/{sim_id}/logs")
+def get_simulation_logs(sim_id: int, db: Session = Depends(get_db)):
+    """Fetch logs for a specific simulation"""
+    sim = db.query(Simulation).get(sim_id)
+    if not sim:
+        raise HTTPException(404, "Simulation not found")
+    
+    logs = get_simulation_log_content(sim_id)
+    return {"simulation_id": sim_id, "logs": logs}
+
+
+@router.delete("/{sim_id}/logs")
+def delete_logs(sim_id: int, db: Session = Depends(get_db)):
+    """Delete logs for a specific simulation"""
+    sim = db.query(Simulation).get(sim_id)
+    if not sim:
+        raise HTTPException(404, "Simulation not found")
+    
+    if delete_simulation_log(sim_id):
+        return {"message": "Logs deleted successfully"}
+    else:
+        raise HTTPException(404, "No logs found for this simulation")
 
 
 @router.delete("/")

@@ -4,6 +4,7 @@ import time
 
 from core.load_balancer import LoadBalancer, RuntimeServer
 from core.websocket_manager import WebSocketManager
+from core.simulation_logger import get_simulation_logger
 
 from core.logger import logger
 
@@ -32,6 +33,7 @@ class SimulationEngine:
         self.waves = waves
         self.ws_manager = ws_manager
         self.db_session_factory = db_session_factory
+        self.sim_logger = get_simulation_logger(simulation_id)
 
         self.lb = LoadBalancer()
         self.lb.set_servers(servers)
@@ -41,6 +43,10 @@ class SimulationEngine:
         self.total_processed = 0
         self.total_requests = sum(w["requests"] for w in waves)
         self._cancelled = False
+        
+        self.sim_logger.info(f"Simulation {simulation_id} initialized")
+        self.sim_logger.info(f"Servers: {[s.name for s in servers]}")
+        self.sim_logger.info(f"Total requests: {self.total_requests}")
 
     def cancel(self):
         """Called from the /stop endpoint. Checked between requests, not mid-request."""
@@ -48,11 +54,14 @@ class SimulationEngine:
 
     async def run(self):
         start_time = time.time()
+        self.sim_logger.info("Simulation run started")
 
         for wave in self.waves:
             if self._cancelled:
+                self.sim_logger.info("Simulation cancelled by user")
                 break
 
+            self.sim_logger.info(f"Processing wave {wave['wave']} with {wave['requests']} requests")
             await self._process_wave(wave)
 
             await self.ws_manager.broadcast(self.simulation_id, {
@@ -61,6 +70,7 @@ class SimulationEngine:
                 "total_processed": self.total_processed,
                 "total_requests": self.total_requests,
             })
+            self.sim_logger.info(f"Wave {wave['wave']} completed. Total processed: {self.total_processed}")
 
         elapsed = time.time() - start_time
         status = "STOPPED" if self._cancelled else "COMPLETED"
@@ -71,6 +81,10 @@ class SimulationEngine:
             "simulation_time_sec": round(elapsed, 2),
             "throughput_rps": round(self.total_processed / elapsed, 2) if elapsed > 0 else 0,
         }
+        
+        self.sim_logger.info(f"Simulation completed with status: {status}")
+        self.sim_logger.info(f"Distribution: {self.distribution}")
+        self.sim_logger.info(f"Summary: {summary}")
 
         self._persist_final(status, summary)
 
@@ -104,6 +118,8 @@ class SimulationEngine:
 
             # logger.info(f"{request_id} | {server.name}")
 
+            self.sim_logger.info(f"Request {request_id} routed to {server.name} with ID {server.id}")
+
             await asyncio.sleep(wave["interval_ms"] / 1000)
 
     def _persist_final(self, status: str, summary: dict):
@@ -115,5 +131,10 @@ class SimulationEngine:
                 sim.status = status
                 sim.result_summary = summary
                 db.commit()
+                self.sim_logger.info(f"Simulation results persisted to database with status {status}")
+            else:
+                self.sim_logger.error(f"Could not find simulation {self.simulation_id} in database")
+        except Exception as e:
+            self.sim_logger.error(f"Error persisting simulation results: {e}")
         finally:
             db.close()

@@ -1,5 +1,5 @@
 from core.algorithms.round_robin import RoundRobin
-
+from core.algorithms.weighted_round_robin import WeightedRoundRobin
 class RuntimeServer:
 
     def __init__(self, db_server):
@@ -37,6 +37,7 @@ class LoadBalancer:
     def __init__(self, algorithm=None):
         self.servers: list[RuntimeServer] = []
         self.algorithm = algorithm or RoundRobin()
+        self.algorithm = algorithm or WeightedRoundRobin()
 
     def set_servers(self, servers: list[RuntimeServer]):
         """Refresh the in-memory server list (call once per run, or on demand)."""

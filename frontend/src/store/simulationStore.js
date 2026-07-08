@@ -52,13 +52,30 @@ export const useSimulationStore = create((set, get) => ({
 
     startSimulation: async (id) => {
         await simulationApi.start(id);
-        set({ status: "RUNNING" });
+
+        // Find the simulation in the list and set it as active
+        set((state) => {
+            const sim = state.simulations.find((s) => s.id === id);
+            return {
+                status: "RUNNING",
+                activeSimulation: sim || { id },
+                distribution: {},
+                totalPlanned: sim ? sumRequests(sim.traffic_waves) : 0,
+                processed: 0,
+                currentWave: null,
+                summary: null,
+                lastRoutedEvent: null,
+            };
+        });
+
         get().connectSocket(id);
     },
 
     stopSimulation: async (id) => {
         await simulationApi.stop(id);
-        set({ status: "STOPPED" });
+        set({
+            status: "STOPPED",
+        });
         get().disconnectSocket();
     },
 
@@ -98,5 +115,19 @@ export const useSimulationStore = create((set, get) => ({
     disconnectSocket: () => {
         socketInstance?.disconnect();
         socketInstance = null;
+    },
+
+    clearActiveSimulation: () => {
+        set({
+            activeSimulation: null,
+            status: null,
+            distribution: {},
+            totalPlanned: 0,
+            processed: 0,
+            currentWave: null,
+            summary: null,
+            lastRoutedEvent: null,
+        });
+        get().disconnectSocket();
     },
 }));

@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from core.load_balancer import LoadBalancer
 from core.logger import logger
+from core.log_cleanup_scheduler import start_log_cleanup_scheduler, stop_log_cleanup_scheduler
 # import httpx
 from database.database import Base,engine
 from api.routes.server import router as server_router
@@ -15,6 +16,18 @@ app = FastAPI(
     description="A custom load balancer built with FastAPI",
     version="1.0.0"
 )
+
+
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Application starting up...")
+    start_log_cleanup_scheduler()
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info("Application shutting down...")
+    stop_log_cleanup_scheduler()
 
 
 app.add_middleware(

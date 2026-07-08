@@ -17,6 +17,9 @@ export function useSimulation() {
     const createSimulation = useSimulationStore((s) => s.createSimulation);
     const startSimulation = useSimulationStore((s) => s.startSimulation);
     const stopSimulation = useSimulationStore((s) => s.stopSimulation);
+    const clearActiveSimulation = useSimulationStore(
+        (s) => s.clearActiveSimulation,
+    );
 
     return {
         simulations,
@@ -34,5 +37,6 @@ export function useSimulation() {
         createSimulation,
         startSimulation,
         stopSimulation,
+        clearActiveSimulation,
     };
 }
