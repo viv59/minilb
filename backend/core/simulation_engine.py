@@ -27,6 +27,7 @@ class SimulationEngine:
         waves: list[dict],
         ws_manager: WebSocketManager,
         db_session_factory,
+        algorithm: str
     ):
         self.simulation_id = simulation_id
         self.servers = servers
@@ -34,8 +35,9 @@ class SimulationEngine:
         self.ws_manager = ws_manager
         self.db_session_factory = db_session_factory
         self.sim_logger = get_simulation_logger(simulation_id)
+        self.algorithm = algorithm
 
-        self.lb = LoadBalancer()
+        self.lb = LoadBalancer(algorithm)
         self.lb.set_servers(servers)
 
         self.request_counter = itertools.count(1)

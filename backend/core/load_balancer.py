@@ -36,8 +36,12 @@ class LoadBalancer:
 
     def __init__(self, algorithm=None):
         self.servers: list[RuntimeServer] = []
-        self.algorithm = algorithm or RoundRobin()
-        self.algorithm = algorithm or WeightedRoundRobin()
+        # self.algorithm = algorithm or RoundRobin()
+        # self.algorithm = algorithm or WeightedRoundRobin()
+        if algorithm == "round_robin":
+            self.algorithm = RoundRobin()
+        elif algorithm == "weighted":
+            self.algorithm = WeightedRoundRobin()
 
     def set_servers(self, servers: list[RuntimeServer]):
         """Refresh the in-memory server list (call once per run, or on demand)."""

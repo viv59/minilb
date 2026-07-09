@@ -4,6 +4,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from datetime import datetime, timedelta
 import threading
+import time
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 LOG_DIR = BASE_DIR / "logs"
@@ -89,7 +90,7 @@ def get_simulation_log_content(simulation_id: int) -> str:
         return f"Error reading log file: {e}"
 
 
-def delete_simulation_log(simulation_id: int) -> bool:
+# def delete_simulation_log(simulation_id: int) -> bool:
     """
     Delete a specific simulation's log file.
     Returns True if deleted, False otherwise.
@@ -107,3 +108,52 @@ def delete_simulation_log(simulation_id: int) -> bool:
             f"Error deleting simulation log {simulation_id}: {e}"
         )
         return False
+
+def delete_simulation_log(simulation_id: int) -> bool:
+    """
+    Delete a simulation log file.
+
+    Closes any open logging handlers that are writing to this file,
+    then retries deletion a few times (useful on Windows).
+    """
+    log_file = LOG_DIR / f"simulation_{simulation_id}.log"
+
+    if not log_file.exists():
+        return False
+
+    # Close any FileHandlers using this file
+    logger_dict = logging.Logger.manager.loggerDict
+
+    for logger_name, logger in logger_dict.items():
+        if not isinstance(logger, logging.Logger):
+            continue
+
+        for handler in logger.handlers[:]:
+            if (
+                isinstance(handler, logging.FileHandler)
+                and Path(handler.baseFilename) == log_file.resolve()
+            ):
+                try:
+                    handler.flush()
+                    handler.close()
+                    logger.removeHandler(handler)
+                except Exception:
+                    pass
+
+    # Retry deletion a few times
+    for _ in range(5):
+        try:
+            log_file.unlink()
+            return True
+        except PermissionError:
+            time.sleep(0.2)
+        except Exception as e:
+            logging.getLogger("minilb").error(
+                f"Error deleting simulation log {simulation_id}: {e}"
+            )
+            return False
+
+    logging.getLogger("minilb").error(
+        f"Unable to delete simulation log {simulation_id}: file is still in use."
+    )
+    return False

@@ -69,6 +69,7 @@ async def start_simulation(sim_id: int, background_tasks: BackgroundTasks, db: S
         waves=sim.traffic_waves,
         ws_manager=ws_manager,
         db_session_factory=SessionLocal,
+        algorithm=sim.algorithm
     )
     running_engines[sim_id] = engine
 

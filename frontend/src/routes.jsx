@@ -8,6 +8,7 @@ import Settings from "./pages/Settings.jsx";
 import Simulations from "./pages/Simulations.jsx";
 import RunningSimulation from "./pages/RunningSimulation.jsx";
 import SimulationLogsPage from "./pages/SimulationLogsPage.jsx";
+import SimulationLog from "./pages/SimulationLog.jsx"
 
 export const router = createBrowserRouter([
     {
@@ -22,6 +23,7 @@ export const router = createBrowserRouter([
             { path: "simulations", element: <Simulations /> },
             { path: "simulation/:simId", element: <RunningSimulation /> },
             { path: "simulation-logs", element: <SimulationLogsPage /> },
+            { path: "simulation-log/:simId", element: <SimulationLog />  }
         ],
     },
 ]);

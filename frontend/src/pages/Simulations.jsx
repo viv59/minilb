@@ -69,6 +69,7 @@ export default function Simulations() {
                 traffic_waves: waves,
             };
             const sim = await createSimulation(payload);
+            console.log(sim)
 
             // Reset form
             setName("demo-run");
@@ -159,7 +160,7 @@ export default function Simulations() {
                                 onClick={addWave}
                                 variant="secondary"
                                 size="sm"
-                                className="flex items-center gap-2"
+                                className="flex items-center gap-2 border border-primary"
                             >
                                 <Plus size={16} />
                                 Add Wave
