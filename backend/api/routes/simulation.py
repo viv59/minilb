@@ -132,6 +132,24 @@ def delete_all_simulations(db: Session = Depends(get_db)):
 
     return {"message": "All simulations deleted", "deleted_count": deleted_count}
 
+@router.delete("/{sim_id}")
+def delete_simulation(sim_id: int, db: Session = Depends(get_db)):
+    """Delete a specific simulation"""
+
+    sim = db.query(Simulation).filter(Simulation.id == sim_id).first()
+
+    if not sim:
+        raise HTTPException(404, "Simulation not found")
+    
+    # Try to delete logs if they exist, but don't fail if they don't
+    delete_simulation_log(sim_id)
+    
+    db.delete(sim)
+    db.commit()
+
+    return {
+        "message": f"Simulation {sim_id} deleted successfully"
+    }
 
 @router.websocket("/ws/{sim_id}")
 async def simulation_ws(websocket: WebSocket, sim_id: int):

@@ -9,4 +9,5 @@ export const simulationApi = {
     getLogs: (id) => api.get(`/simulations/${id}/logs`).then((r) => r.data),
     deleteLogs: (id) =>
         api.delete(`/simulations/${id}/logs`).then((r) => r.data),
+    remove: (id) => api.delete(`/simulations/${id}`).then((r) => r.data)
 };

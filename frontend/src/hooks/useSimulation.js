@@ -20,6 +20,7 @@ export function useSimulation() {
     const clearActiveSimulation = useSimulationStore(
         (s) => s.clearActiveSimulation,
     );
+    const removeSimulation = useSimulationStore((s) => s.removeSimulation)
 
     return {
         simulations,
@@ -38,5 +39,6 @@ export function useSimulation() {
         startSimulation,
         stopSimulation,
         clearActiveSimulation,
+        removeSimulation,
     };
 }

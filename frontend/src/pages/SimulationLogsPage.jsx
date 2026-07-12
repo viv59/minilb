@@ -5,46 +5,47 @@ import Card from "../components/common/Card.jsx";
 import Button from "../components/common/Button.jsx";
 import Loader from "../components/common/Loader.jsx";
 import { simulationApi } from "../api/simulationApi.js";
+import { useSimulation } from "../hooks/useSimulation.js";
 
 export default function SimulationLogsPage() {
     const navigate = useNavigate();
-    const [simulations, setSimulations] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    // const [simulations, fetchSimulations, setSimulations] = useSimulation();
+    // const [loading, setLoading] = useState(false);
+    // const [error, setError] = useState(null);
+    // const { simulation, removeSimulation } = useSimulation();
+    const { simulations, fetchSimulations, removeSimulation, loading, error } = useSimulation();
 
     useEffect(() => {
         fetchSimulations();
     }, []);
 
-    async function fetchSimulations() {
-        setLoading(true);
-        setError(null);
-        try {
-            const data = await simulationApi.list();
-            console.log(data)
-            // const completedSims = data.filter(
-            //     (s) =>
-            //         s.status === "COMPLETED" ||
-            //         s.status === "STOPPED" ||
-            //         s.status === "FAILED",
-            // );
-            const completedSims = data
-            console.log(completedSims)
-            setSimulations(completedSims);
-        } catch (err) {
-            setError(err.message || "Failed to load simulations");
-        } finally {
-            setLoading(false);
-        }
-    }
+    // async function fetchSimulations() {
+    //     setLoading(true);
+    //     setError(null);
+    //     try {
+    //         const data = await simulationApi.list();
+    //         console.log(data);
+    //         // const completedSims = data.filter(
+    //         //     (s) =>
+    //         //         s.status === "COMPLETED" ||
+    //         //         s.status === "STOPPED" ||
+    //         //         s.status === "FAILED",
+    //         // );
+    //         const completedSims = data;
+    //         console.log(completedSims);
+    //         setSimulations(completedSims);
+    //     } catch (err) {
+    //         setError(err.message || "Failed to load simulations");
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // }
 
     function handleSelectSimulation(sim) {
-        console.log("Clicked simulation:", sim);
-        console.log("Navigating to:", `/simulation-log/${sim.id}`);
         navigate(`/simulation-log/${sim.id}`, {
-            state:{
-                result_summary: sim.result_summary
-            }
+            state: {
+                result_summary: sim.result_summary,
+            },
         });
     }
 
@@ -163,6 +164,9 @@ export default function SimulationLogsPage() {
                                     <th className="px-4 py-3 text-left text-sm font-semibold text-text-primary">
                                         Created
                                     </th>
+                                    <th className="px-4 py-3 text-left text-sm font-semibold text-text-primary">
+                                        Action
+                                    </th>
                                 </tr>
                             </thead>
 
@@ -170,16 +174,21 @@ export default function SimulationLogsPage() {
                                 {simulations.map((sim) => (
                                     <tr
                                         key={sim.id}
-                                        onClick={() =>
-                                            handleSelectSimulation(sim)
-                                        }
-                                        className="cursor-pointer border-b border-border-primary transition-colors hover:bg-bg-primary"
+                                        // onClick={() =>
+                                        //     handleSelectSimulation(sim)
+                                        // }
+                                        className="border-b border-border-primary transition-colors hover:bg-bg-primary"
                                     >
                                         <td className="px-4 py-3 text-sm text-text-primary">
                                             {sim.id}
                                         </td>
 
-                                        <td className="px-4 py-3 text-sm text-text-primary">
+                                        <td
+                                            className="cursor-pointer px-4 py-3 text-sm text-text-primary"
+                                            onClick={() =>
+                                                handleSelectSimulation(sim)
+                                            }
+                                        >
                                             {sim.name}
                                         </td>
 
@@ -187,16 +196,16 @@ export default function SimulationLogsPage() {
                                             {sim.algorithm}
                                         </td>
 
-                                        <td className="px-4 py-3">
+                                        <td className="px-4 py-3 text-sm text-text-dim">
                                             <span
-                                                className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                                                    sim.status === "COMPLETED"
-                                                        ? "bg-status-green/20 text-status-green"
-                                                        : sim.status ===
-                                                            "STOPPED"
-                                                          ? "bg-status-red/20 text-status-red"
-                                                          : "bg-status-yellow/20 text-status-yellow"
-                                                }`}
+                                            // className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                                            //     sim.status === "COMPLETED"
+                                            //         ? "bg-status-green/20 text-status-green"
+                                            //         : sim.status ===
+                                            //             "STOPPED"
+                                            //           ? "bg-status-red/20 text-status-red"
+                                            //           : "bg-status-yellow/20 text-status-yellow"
+                                            // }`}
                                             >
                                                 {sim.status}
                                             </span>
@@ -208,6 +217,16 @@ export default function SimulationLogsPage() {
                                                       sim.created_at,
                                                   ).toLocaleString()
                                                 : "-"}
+                                        </td>
+                                        <td className="px-4 py-3 text-sm text-text-dim">
+                                            <Button
+                                                variant="danger"
+                                                onClick={() =>
+                                                    removeSimulation(sim.id)
+                                                }
+                                            >
+                                                Delete
+                                            </Button>
                                         </td>
                                     </tr>
                                 ))}

@@ -130,4 +130,17 @@ export const useSimulationStore = create((set, get) => ({
         });
         get().disconnectSocket();
     },
+
+    removeSimulation: async (id) => {
+        try {
+            await simulationApi.remove(id);
+
+            set((state) => ({
+                simulations: state.simulations.filter((s) => s.id !== id),
+            }));
+        } catch (err) {
+            console.error(err);
+        }
+    },
+
 }));
