@@ -7,19 +7,45 @@ import { api } from './axios.js'
 // consistently on the backend and delete this function entirely.
 function normalizeServer(raw) {
 
+  const health = raw.health ?? {}
+
   return {
-    id: raw.id ?? raw.server_id,
-    name: raw.name ?? `Server ${raw.id ?? raw.server_id}`,
-    status: raw.status ?? 'Healthy',
-    ip: raw.ip ?? raw.ip_address ?? '',
+    id: raw.id,
+    name: raw.name,
+    hostname: raw.hostname ?? '',
+    ip: raw.ip_address ?? '',
     port: raw.port ?? 0,
-    cpu: raw.cpu ?? raw.cpu_usage ?? 0,
-    memory: raw.memory ?? raw.memory_usage ?? 0,
-    reqMin: raw.reqMin ?? raw.req_per_min ?? raw.requests_per_minute ?? 0,
-    uptime: raw.uptime ?? '',
-    created: raw.created ?? raw.created_at ?? '',
-    url: raw.url ?? '',
-    weight: raw.weight ?? 1
+
+    status: raw.status ?? false,
+    maintenanceMode: raw.maintenance_mode ?? false,
+
+    weight: raw.weight ?? 1,
+    priority: raw.priority ?? 0,
+
+    maxConnections: raw.max_connections ?? null,
+    cpu: raw.cpu ?? null,
+    memory: raw.memory ?? null,
+
+    region: raw.region ?? '',
+    country: raw.country ?? '',
+    datacenter: raw.datacenter ?? '',
+
+    supportsStickySession: raw.supports_sticky_session ?? false,
+
+    createdAt: raw.created_at ?? '',
+    updatedAt: raw.updated_at ?? '',
+
+    // runtime metrics - will be zero/null until the health-check job exists
+    activeConnections: health.active_connections ?? 0,
+    currentRequests: health.current_requests ?? 0,
+    responseTimeMs: health.response_time_ms ?? null,
+    averageLatencyMs: health.average_latency_ms ?? null,
+    errorRate: health.error_rate ?? null,
+    cpuUsage: health.cpu_usage ?? null,
+    memoryUsage: health.memory_usage ?? null,
+    networkUsage: health.network_usage ?? null,
+    lastHealthCheck: health.last_health_check ?? null,
+
   }
 }
 

@@ -6,9 +6,9 @@ import { ServerUIProvider } from './context/ServerContext.jsx'
 import { useServerStore } from './store/serverStore.js'
 
 export default function App() {
-  useEffect(() => {
-    useServerStore.getState().fetchServers()
-  }, [])
+  // useEffect(() => {
+  //   useServerStore.getState().fetchServers()
+  // }, [])
 
   return (
     <ThemeProvider>

@@ -3,25 +3,92 @@ from typing import Optional
 
 class ServerCreate(BaseModel):
     name: str
-    cpu: int
-    memory: int
+    hostname: Optional[str] = None
+    ip_address: Optional[str] = None
+    port: int = 8000
+
     weight: int = 1
+    priority: int = 0
+
+    max_connections: Optional[int] = None
+    cpu: Optional[int]= None
+    memory: Optional[int] = None
+
+    region: Optional[str] = None
+    country: Optional[str] = None
+    datacenter: Optional[str] = None
+
+    supports_sticky_session: bool = False
 
 class ServerUpdate(BaseModel):
     name: Optional[str] = None
+    hostname: Optional[str] = None
+    ip_address: Optional[str] = None
+    port: Optional[int] = None
+
+    status: Optional[bool] = None
+    maintenance_mode: Optional[bool] = None
+
+    weight: Optional[int] = None
+    priority: Optional[int] = None
+
+    max_connections: Optional[int] = None
     cpu: Optional[int] = None
     memory: Optional[int] = None
-    weight: Optional[int] = None
-    status: Optional[int] = None
+
+    region: Optional[str] = None
+    country: Optional[str] = None
+    datacenter: Optional[str] = None
+
+    supports_sticky_session: Optional[bool] = None
+
+from pydantic import BaseModel
+from typing import Optional
+from datetime import datetime
+
+
+class ServerHealthOut(BaseModel):
+    active_connections: int
+    current_requests: int
+    response_time_ms: Optional[float]
+    average_latency_ms: Optional[float]
+    error_rate: Optional[float]
+    cpu_usage: Optional[float]
+    memory_usage: Optional[float]
+    network_usage: Optional[float]
+    last_health_check: Optional[datetime]
+
+    class Config:
+        orm_mode = True  # orm_mode in Pydantic v1
+
 
 class ServerOut(BaseModel):
     id: int
     name: str
-    url: str
+    hostname: Optional[str]
+    ip_address: Optional[str]
+    port: int
+
     status: bool
+    maintenance_mode: bool
+
     weight: int
-    cpu: Optional[int] = None
-    memory: Optional[int] = None
+    priority: int
+
+    max_connections: Optional[int]
+    cpu: Optional[int]
+    memory: Optional[int]
+
+    region: Optional[str]
+    country: Optional[str]
+    datacenter: Optional[str]
+
+    supports_sticky_session: bool
+
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    health: Optional[ServerHealthOut]
 
     class Config:
         orm_mode = True

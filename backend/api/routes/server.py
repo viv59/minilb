@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from database.database import get_db
-from models.db_model import Server
+from models.db_model import Server, ServerHealth
 from models.schema import ServerCreate, ServerUpdate
 
 from core.logger import logger
@@ -14,23 +14,19 @@ load_balancer = LoadBalancer()
 
 @router.post("/")
 def create_server(server: ServerCreate, db: Session = Depends(get_db)):
-    new_server = Server(
-        name=server.name,
-        cpu=server.cpu,
-        memory=server.memory,
-        weight=server.weight,
-        url=f"http://localhost:{8000}",
-        status=True
-    )
+    new_server = Server(**server.dict(), status=True)
 
     db.add(new_server)
+    db.flush()
+
+    health = ServerHealth(server_id=new_server.id)
+    db.add(health)
+
     db.commit()
     db.refresh(new_server)
 
-    logger.info(f"New server added - {new_server.name}")
-
-    return{
-        "message": "Server created successfully!",
+    return {
+        "message": "Server created successfully",
         "server": new_server
     }
 
@@ -40,7 +36,10 @@ def get_servers(db: Session = Depends(get_db)):
     logger.info("Get all servers!!!!")
 
     servers = (
-        db.query(Server).order_by(Server.id.desc()).all()
+        db.query(Server)
+        .options(joinedload(Server.health))
+        .order_by(Server.id.desc())
+        .all()
     )
 
     if not servers:
@@ -59,9 +58,7 @@ def update_server(server_id: int, server: ServerUpdate, db: Session = Depends(ge
     db_server = db.query(Server).filter(Server.id == server_id).first()
 
     if not db_server:
-        return {
-            "message": "Server not found"
-        }
+        raise HTTPException(status_code=404, detail="Server not found")
     
     # update_data = server.model_dump(exclude_unset=True)
     update_data = server.dict(exclude_unset=True)
@@ -86,7 +83,9 @@ def delete_server(server_id: int, db: Session = Depends(get_db)):
     server = db.query(Server).filter(Server.id == server_id).first()
 
     if not server:
-        return {"message": "Server not found"}
+        raise HTTPException(status_code=404, detail="Server not found")
+    
+    db.query(ServerHealth).filter(ServerHealth.server_id == server_id).delete()
     
     db.delete(server)
     db.commit()
@@ -97,18 +96,18 @@ def delete_server(server_id: int, db: Session = Depends(get_db)):
         "message": "Server deleted successfully"
     }
 
-@router.post("/route-request")
-def route_request(db: Session = Depends(get_db)):
-    db_servers = db.query(Server).filter(Server.status == True).all()  # noqa: E712
-    runtime_servers = build_runtime_servers(db_servers)
-    load_balancer.set_servers(runtime_servers)
-    server = load_balancer.get_next_server()
+# @router.post("/route-request")
+# def route_request(db: Session = Depends(get_db)):
+#     db_servers = db.query(Server).filter(Server.status == True).all()  # noqa: E712
+#     runtime_servers = build_runtime_servers(db_servers)
+#     load_balancer.set_servers(runtime_servers)
+#     server = load_balancer.get_next_server()
 
-    if server is None:
-        logger.info("No healthy servers available for routing")
-        raise HTTPException(status_code=404, detail="No healthy servers available")
+#     if server is None:
+#         logger.info("No healthy servers available for routing")
+#         raise HTTPException(status_code=404, detail="No healthy servers available")
 
-    return {
-        "selected_server": server.name,
-        "server_id": server.id
-    }
+#     return {
+#         "selected_server": server.name,
+#         "server_id": server.id
+#     }

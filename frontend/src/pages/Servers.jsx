@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useServers } from '../hooks/useServers.js'
 import { useServerUI } from '../context/ServerContext.jsx'
 import ServerCard from '../components/servers/ServerCard.jsx'
@@ -5,8 +6,15 @@ import AddServerModal from '../components/servers/AddServerModal.jsx'
 import EditServerModal from '../components/servers/EditServerModal.jsx'
 
 export default function Servers() {
-  const { servers, removeServer } = useServers()
+  const { servers, loading, error, fetchServers, removeServer } = useServers()
   const { openEditModal } = useServerUI()
+
+  useEffect(() => {
+    fetchServers()
+  }, [fetchServers])
+
+  if (loading) return <div>Loading servers...</div>
+  if (error) return <div className="text-red-500">Error: {error}</div>
 
   return (
     <div>

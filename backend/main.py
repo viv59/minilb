@@ -12,9 +12,14 @@ from fastapi.middleware.cors import CORSMiddleware
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Custom Load Balancer",
+    title="miniLB",
     description="A custom load balancer built with FastAPI",
-    version="1.0.0"
+    version="1.0.0",
+    contact={
+        "name": "Vivek Gaikwad",
+        "url": "https://github.com/viv59",
+        "email": "viveksgaikwad24@gmail.com",
+    },
 )
 
 
