@@ -71,3 +71,78 @@ export const NAV_ITEMS = [
 
 export const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+
+export const locationData = {
+  "North America": {
+    USA: [
+      "US-East-1 (Virginia)",
+      "US-East-2 (Ohio)",
+      "US-West-1 (California)",
+      "US-West-2 (Oregon)",
+      "Central US (Texas)"
+    ],
+    Canada: [
+      "Canada Central (Toronto)",
+      "Canada East (Quebec)"
+    ],
+    Mexico: [
+      "Mexico Central"
+    ]
+  },
+
+  Europe: {
+    Germany: [
+      "Frankfurt",
+      "Berlin"
+    ],
+    UK: [
+      "London",
+      "Manchester"
+    ],
+    France: [
+      "Paris"
+    ],
+    Netherlands: [
+      "Amsterdam"
+    ]
+  },
+
+  Asia: {
+    India: [
+      "Mumbai",
+      "Hyderabad",
+      "Chennai",
+      "Delhi"
+    ],
+    Singapore: [
+      "Singapore-1",
+      "Singapore-2"
+    ],
+    Japan: [
+      "Tokyo",
+      "Osaka"
+    ],
+    Korea: [
+      "Seoul"
+    ]
+  },
+
+  Australia: {
+    Australia: [
+      "Sydney",
+      "Melbourne"
+    ],
+    NewZealand: [
+      "Auckland"
+    ]
+  },
+
+  SouthAmerica: {
+    Brazil: [
+      "Sao Paulo"
+    ],
+    Chile: [
+      "Santiago"
+    ]
+  }
+}
