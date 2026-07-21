@@ -24,7 +24,7 @@ export default function ServerCard({ server, onEdit, onDelete }) {
             <div className="flex items-center justify-between">
                 <div className="text-sm font-semibold">{server.name}</div>
                 <div>
-                    {server.status ? (
+                    {/* {server.status ? (
                         <span className="text-xs text-status-green">
                             ● {server.status}
                         </span>
@@ -32,7 +32,23 @@ export default function ServerCard({ server, onEdit, onDelete }) {
                         <span className="text-xs text-status-red">
                             ● {server.status}
                         </span>
-                    )}
+                    )} */}
+                    {
+                        server.status ? server.maintenanceMode ? (
+                            <span className="text-xs text-yellow-400">
+                            ● {server.status}
+                        </span>
+                        ) : (
+                            <span className="text-xs text-status-green">
+                            ● {server.maintenanceMode}
+                        </span>
+                        ) : (
+                            <span className="text-xs text-status-red">
+                            ● {server.status}
+                        </span>
+                        )
+                    }
+
                 </div>
             </div>
             <div className="mt-3 space-y-1.5 text-xs text-text-dim">

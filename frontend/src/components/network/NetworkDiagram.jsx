@@ -69,7 +69,8 @@ export default function NetworkDiagram() {
         const startY = lbBox.top + lbBox.height / 2 - containerBox.top;
 
         const nextPaths = servers
-            .filter((s) => s.status)
+            // .filter((s) => s.status)
+            .filter((s) => s.status && !s.maintenanceMode)
             .map((s) => {
                 const el = serverRefs.current[s.id];
                 if (!el) return null;

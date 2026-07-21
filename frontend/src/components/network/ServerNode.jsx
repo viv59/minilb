@@ -7,9 +7,22 @@ const ServerNode = forwardRef(function ServerNode(
     ref,
 ) {
     const healthy = server.status;
+    const maintenance = server.maintenanceMode
+
+    console.log("hehe",server)
 
     const classes = healthy
+    ? maintenance
         ? {
+              border: "border-yellow-400",
+              borderLight: "border-yellow-400/30",
+              bg: "bg-yellow-400/10",
+              bgLight: "bg-yellow-400/5",
+              hover: "group-hover:border-yellow-400",
+              text: "text-yellow-400",
+              shadow: "shadow-yellow-400/30",
+          }
+        : {
               border: "border-status-green",
               borderLight: "border-status-green/30",
               bg: "bg-status-green/10",
@@ -18,15 +31,15 @@ const ServerNode = forwardRef(function ServerNode(
               text: "text-status-green",
               shadow: "shadow-status-green/30",
           }
-        : {
-              border: "border-status-red",
-              borderLight: "border-status-red/30",
-              bg: "bg-status-red/10",
-              bgLight: "bg-status-red/5",
-              hover: "group-hover:border-status-red",
-              text: "text-status-red",
-              shadow: "shadow-status-red/30",
-          };
+    : {
+          border: "border-status-red",
+          borderLight: "border-status-red/30",
+          bg: "bg-status-red/10",
+          bgLight: "bg-status-red/5",
+          hover: "group-hover:border-status-red",
+          text: "text-status-red",
+          shadow: "shadow-status-red/30",
+      };
 
     const selectedClass = selected
         ? `${classes.border} ${classes.bg}`
@@ -46,7 +59,16 @@ const ServerNode = forwardRef(function ServerNode(
                 <ServerIcon className={`h-5 w-5 ${classes.text}`} />
             </div>
 
-            {handledRequests !== null && handledRequests !== undefined && (
+            {/* {handledRequests !== null && handledRequests !== undefined && (
+                <div className="absolute top-0 right-0 z-20 flex -translate-y-1/3 translate-x-1/3">
+                    <span className="absolute inset-0 rounded-full bg-accent2 opacity-40"></span>
+                    <span className="relative flex min-w-5 min-h-5 items-center justify-center rounded-full border-2 border-app-panel bg-accent2 px-1 text-[0.625rem] font-bold leading-none text-white shadow-lg">
+                        {handledRequests > 999 ? "999+" : handledRequests}
+                    </span>
+                </div>
+            )} */}
+
+            {healthy && !maintenance && handledRequests !== null && handledRequests !== undefined && (
                 <div className="absolute top-0 right-0 z-20 flex -translate-y-1/3 translate-x-1/3">
                     <span className="absolute inset-0 rounded-full bg-accent2 opacity-40"></span>
                     <span className="relative flex min-w-5 min-h-5 items-center justify-center rounded-full border-2 border-app-panel bg-accent2 px-1 text-[0.625rem] font-bold leading-none text-white shadow-lg">
@@ -61,7 +83,11 @@ const ServerNode = forwardRef(function ServerNode(
                         {server.id} - {server.name}
                     </div>
                     <span className={`text-xs ${classes.text}`}>
-                        ● {healthy ? "Healthy" : "Unhealthy"}
+                        ● {healthy
+                            ? maintenance
+                                ? "Maintenance"
+                                : "Healthy"
+                            : "Unhealthy"}
                     </span>
                 </div>
                 <div className="mt-2 flex items-center justify-between text-xs text-text-faint">

@@ -49,6 +49,7 @@ class SimulationEngine:
         self.sim_logger.info(f"Simulation {simulation_id} initialized")
         self.sim_logger.info(f"Servers: {[s.name for s in servers]}")
         self.sim_logger.info(f"Total requests: {self.total_requests}")
+        self.sim_logger.info(f"Algorithm used: {algorithm}")
 
     def cancel(self):
         """Called from the /stop endpoint. Checked between requests, not mid-request."""

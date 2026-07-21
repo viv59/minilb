@@ -55,7 +55,15 @@ async def start_simulation(sim_id: int, background_tasks: BackgroundTasks, db: S
     if sim.status == SimulationStatus.RUNNING:
         raise HTTPException(400, "Simulation already running")
 
-    db_servers = db.query(Server).filter(Server.status == True).all()  # noqa: E712
+    # db_servers = db.query(Server).filter(Server.status == True).all()  # noqa: E712
+    db_servers = (
+        db.query(Server)
+        .filter(
+            Server.status == True,
+            Server.maintenance_mode == False,
+        )
+        .all()
+    )
     if not db_servers:
         raise HTTPException(400, "No healthy servers available")
 
