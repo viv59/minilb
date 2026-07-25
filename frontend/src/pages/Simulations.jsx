@@ -9,6 +9,7 @@ import { useSimulation } from "../hooks/useSimulation.js";
 const ALGORITHM_OPTIONS = [
     { value: "round_robin", label: "Round Robin" },
     { value: "least_connections", label: "Least Connections" },
+    { value: "weighted_least_connections", label: "Weighted Least Connections" },
     { value: "weighted", label: "Weighted" },
     { value: "ip_hash", label: "IP Hash" },
 ];
@@ -24,8 +25,8 @@ export default function Simulations() {
         startSimulation,
     } = useSimulation();
 
-    const [name, setName] = useState("demo-run");
-    const [algorithm, setAlgorithm] = useState("round_robin");
+    const [name, setName] = useState(generateSimulationName());
+    const [algorithm, setAlgorithm] = useState("least_connections");
     const [waves, setWaves] = useState([
         { wave: 1, requests: 20, interval_ms: 10 },
     ]);
@@ -72,7 +73,8 @@ export default function Simulations() {
             console.log(sim)
 
             // Reset form
-            setName("demo-run");
+            // setName("demo-run");
+            setName(generateSimulationName());
             setAlgorithm("round_robin");
             setWaves([{ wave: 1, requests: 20, interval_ms: 10 }]);
 
@@ -98,6 +100,22 @@ export default function Simulations() {
     const createdSimulations = simulations.filter(
         (s) => s.status === "CREATED",
     );
+
+    function generateSimulationName(prefix = "sim"){
+        const now = new Date();
+
+        const date = `${String(now.getDate()).padStart(2, "0")}` +
+                     `${String(now.getMonth() + 1).padStart(2, "0")}` +
+                     `${now.getFullYear()}`;
+
+        const unique = `${Date.now().toString(36)}${crypto.randomUUID().slice(0, 4)}`;
+
+        const time = `${String(now.getHours()).padStart(2, "0")}` +
+                     `${String(now.getMinutes()).padStart(2, "0")}` +
+                     `${String(now.getSeconds()).padStart(2, "0")}`;
+
+        return `${prefix}_${date}${time}`;
+    }
 
     return (
         <div className="flex flex-col gap-6">

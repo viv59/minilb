@@ -111,3 +111,38 @@ def delete_server(server_id: int, db: Session = Depends(get_db)):
 #         "selected_server": server.name,
 #         "server_id": server.id
 #     }
+
+import httpx
+
+@router.post("/route-request")
+async def route_request(db: Session = Depends(get_db)):
+    db_servers = (
+        db.query(Server)
+        .options(joinedload(Server.health))
+        .filter(Server.status == True, Server.maintenance_mode == False)  # noqa: E712
+        .all()
+    )
+
+    runtime_servers = build_runtime_servers(db_servers)
+    load_balancer.set_servers(runtime_servers)
+    server = load_balancer.get_next_server()
+
+    if server is None:
+        raise HTTPException(status_code=404, detail="No healthy servers available")
+
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get(f"{server.url}/handle")
+            resp.raise_for_status()
+            backend_data = resp.json()
+    except httpx.HTTPError as e:
+        logger.error(f"Server {server.name} failed to handle request: {e}")
+        raise HTTPException(status_code=502, detail=f"Backend {server.name} error")
+    finally:
+        load_balancer.release_connection(server.id)
+
+    return {
+        "selected_server": server.name,
+        "server_id": server.id,
+        "backend_response": backend_data,
+    }

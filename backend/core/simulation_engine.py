@@ -2,6 +2,8 @@ import asyncio
 import itertools
 import time
 
+import httpx
+
 from core.load_balancer import LoadBalancer, RuntimeServer
 from core.websocket_manager import WebSocketManager
 from core.simulation_logger import get_simulation_logger
@@ -9,16 +11,6 @@ from core.simulation_logger import get_simulation_logger
 from core.logger import logger
 
 class SimulationEngine:
-    """
-    Runs one simulation's full lifecycle in memory:
-      - processes each traffic wave in order
-      - for every simulated request, asks the LoadBalancer who's next
-      - broadcasts a WebSocket event per request and per completed wave
-      - on completion (or cancellation), persists a summary back to the DB
-
-    One instance = one simulation run. Created fresh in the /start route
-    handler and discarded after the run finishes.
-    """
 
     def __init__(
         self,
@@ -45,14 +37,18 @@ class SimulationEngine:
         self.total_processed = 0
         self.total_requests = sum(w["requests"] for w in waves)
         self._cancelled = False
-        
+
+        # background tasks for in-flight requests, so run() can wait for
+        # them to actually finish before persisting the final summary
+        self._pending_tasks: set[asyncio.Task] = set()
+        self._http_client = httpx.AsyncClient(timeout=5.0)
+
         self.sim_logger.info(f"Simulation {simulation_id} initialized")
         self.sim_logger.info(f"Servers: {[s.name for s in servers]}")
         self.sim_logger.info(f"Total requests: {self.total_requests}")
         self.sim_logger.info(f"Algorithm used: {algorithm}")
 
     def cancel(self):
-        """Called from the /stop endpoint. Checked between requests, not mid-request."""
         self._cancelled = True
 
     async def run(self):
@@ -64,7 +60,7 @@ class SimulationEngine:
                 self.sim_logger.info("Simulation cancelled by user")
                 break
 
-            self.sim_logger.info(f"Processing wave {wave['wave']} with {wave['requests']} requests")
+            self.sim_logger.info(f"Processing wave {wave['wave']} with {wave['requests']} requests and interval(ms) {wave['interval_ms']}")
             await self._process_wave(wave)
 
             await self.ws_manager.broadcast(self.simulation_id, {
@@ -75,6 +71,15 @@ class SimulationEngine:
             })
             self.sim_logger.info(f"Wave {wave['wave']} completed. Total processed: {self.total_processed}")
 
+        # let any still-in-flight requests actually finish before we
+        # compute the final summary, otherwise distribution/connections
+        # would be counted mid-flight rather than settled
+        if self._pending_tasks:
+            self.sim_logger.info(f"Waiting for {len(self._pending_tasks)} in-flight requests to finish")
+            await asyncio.gather(*self._pending_tasks, return_exceptions=True)
+
+        await self._http_client.aclose()
+
         elapsed = time.time() - start_time
         status = "STOPPED" if self._cancelled else "COMPLETED"
 
@@ -84,7 +89,7 @@ class SimulationEngine:
             "simulation_time_sec": round(elapsed, 2),
             "throughput_rps": round(self.total_processed / elapsed, 2) if elapsed > 0 else 0,
         }
-        
+
         self.sim_logger.info(f"Simulation completed with status: {status}")
         self.sim_logger.info(f"Distribution: {self.distribution}")
         self.sim_logger.info(f"Summary: {summary}")
@@ -102,7 +107,7 @@ class SimulationEngine:
             if self._cancelled:
                 return
 
-            server = self.lb.get_next_server()
+            server = self.lb.get_next_server()  # already increments active_connections
             request_id = next(self.request_counter)
             self.total_processed += 1
 
@@ -119,11 +124,57 @@ class SimulationEngine:
                 "total_processed": self.total_processed,
             })
 
-            # logger.info(f"{request_id} | {server.name}")
+            self.sim_logger.info(f"Request {request_id} routed to {server.name if server else 'none'}")
 
-            self.sim_logger.info(f"Request {request_id} routed to {server.name} with ID {server.id}")
+            if server:
+                # fire the real call as a background task - this is what
+                # actually holds the connection open for its true duration,
+                # instead of the fixed wave interval faking it
+                task = asyncio.create_task(self._fire_request(server, request_id, wave["wave"]))
+                self._pending_tasks.add(task)
+                task.add_done_callback(self._pending_tasks.discard)
 
+            # interval_ms paces how often NEW requests are dispatched -
+            # unrelated to how long any individual request takes to finish
             await asyncio.sleep(wave["interval_ms"] / 1000)
+
+    async def _fire_request(self, server, request_id: int, wave: int):
+        """Actually calls the backend server and waits for its response.
+        Releases the connection and broadcasts completion regardless of
+        success/failure/timeout - a connection must always be released."""
+        start = time.time()
+        try:
+            resp = await self._http_client.get(f"{server.url}/handle")
+            resp.raise_for_status()
+            duration_ms = round((time.time() - start) * 1000)
+
+            self.sim_logger.info(f"Request {request_id} completed by {server.name} in {duration_ms}ms")
+
+            await self.ws_manager.broadcast(self.simulation_id, {
+                "event": "request_completed",
+                "request_id": request_id,
+                "server_id": server.id,
+                "server_name": server.name,
+                "wave": wave,
+                "duration_ms": duration_ms,
+                "success": True,
+            })
+        except httpx.HTTPError as e:
+            duration_ms = round((time.time() - start) * 1000)
+            self.sim_logger.error(f"Request {request_id} to {server.name} failed: {e}")
+
+            await self.ws_manager.broadcast(self.simulation_id, {
+                "event": "request_completed",
+                "request_id": request_id,
+                "server_id": server.id,
+                "server_name": server.name,
+                "wave": wave,
+                "duration_ms": duration_ms,
+                "success": False,
+                "error": str(e),
+            })
+        finally:
+            self.lb.release_connection(server.id)
 
     def _persist_final(self, status: str, summary: dict):
         db = self.db_session_factory()

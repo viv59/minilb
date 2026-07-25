@@ -1,5 +1,7 @@
 from core.algorithms.round_robin import RoundRobin
 from core.algorithms.weighted_round_robin import WeightedRoundRobin
+from core.algorithms.least_connections import LeastConnections
+from core.algorithms.weighted_least_connections import WeightedLeastConnections
 
 
 class RuntimeServer:
@@ -21,7 +23,7 @@ class RuntimeServer:
 
         self.weight = db_server.weight
         self.priority = db_server.priority
-        self.backup = getattr(db_server, "backup", False)  # confirm this column made it into the final model
+        self.backup = getattr(db_server, "backup", False)
 
         self.max_connections = db_server.max_connections
         self.cpu_capacity = db_server.cpu
@@ -32,12 +34,10 @@ class RuntimeServer:
         self.datacenter = db_server.datacenter
         self.supports_sticky_session = db_server.supports_sticky_session
 
-        # url is no longer stored - derive it, since hostname/ip/port are the source of truth
         host = db_server.hostname or db_server.ip_address
         self.url = f"http://{host}:{db_server.port}" if host else None
 
         # --- dynamic runtime state, from ServerHealth ---
-        # health may be None if the row hasn't been created yet - don't crash, just zero it out
         health = getattr(db_server, "health", None)
 
         self.active_connections = health.active_connections if health else 0
@@ -65,11 +65,17 @@ class LoadBalancer:
     ALGORITHMS = {
         "round_robin": RoundRobin,
         "weighted": WeightedRoundRobin,
+        "least_connections": LeastConnections,
+        "weighted_least_connections": WeightedLeastConnections,
     }
 
     def __init__(self, algorithm: str = "round_robin"):
         self.servers: list[RuntimeServer] = []
         self.set_algorithm(algorithm)
+        # in-memory, per-server-id live connection counts. Cleared on
+        # process restart - DB snapshot fills the gap until the LB has
+        # routed to a server at least once since startup.
+        self._connection_counts: dict[int, int] = {}
 
     def set_algorithm(self, algorithm: str):
         """Swap algorithms at runtime, e.g. from an admin endpoint."""
@@ -81,11 +87,38 @@ class LoadBalancer:
         self.algorithm = algo_cls()
 
     def set_servers(self, servers: list[RuntimeServer]):
-        """Refresh the in-memory server list (call once per run, or on demand)."""
+        """Refresh the in-memory server list. Live connection counts
+        override the DB-derived snapshot on each server, so routing
+        decisions use the freshest number the LB actually knows about."""
+        for server in servers:
+            if server.id in self._connection_counts:
+                server.active_connections = self._connection_counts[server.id]
         self.servers = servers
 
     def get_next_server(self):
         healthy_servers = [s for s in self.servers if s.healthy]
         if not healthy_servers:
             return None
-        return self.algorithm.get_server(healthy_servers)
+
+        # sync live counts onto the runtime objects before the algorithm
+    # reads them - without this, LeastConnections always sees stale data
+        for s in healthy_servers:
+            if s.id in self._connection_counts:
+                s.active_connections = self._connection_counts[s.id]
+
+        server = self.algorithm.get_server(healthy_servers)
+        if server is not None:
+            self._connection_counts[server.id] = self._connection_counts.get(server.id, 0) + 1
+            server.active_connections = self._connection_counts[server.id]  # keep it in sync immediately too
+        return server
+
+
+    def release_connection(self, server_id: int):
+        if server_id in self._connection_counts and self._connection_counts[server_id] > 0:
+            self._connection_counts[server_id] -= 1
+            # also sync onto whichever RuntimeServer object currently
+            # represents this id, if it's still in self.servers
+            for s in self.servers:
+                if s.id == server_id:
+                    s.active_connections = self._connection_counts[server_id]
+                    break

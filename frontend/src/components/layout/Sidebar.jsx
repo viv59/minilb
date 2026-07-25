@@ -33,8 +33,8 @@ export default function Sidebar() {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-accent1 to-accent2">
                     <Hexagon size={16} className="text-white" />
                 </div>
-                <span className="text-sm font-semibold tracking-tight">
-                    LoadBalancer Pro
+                <span className="text-sm font-semibold font-mono tracking-tight">
+                    miniLB
                 </span>
             </div>
 
