@@ -10,7 +10,7 @@ const ALGORITHM_OPTIONS = [
     { value: "round_robin", label: "Round Robin" },
     { value: "least_connections", label: "Least Connections" },
     { value: "weighted_least_connections", label: "Weighted Least Connections" },
-    { value: "weighted", label: "Weighted" },
+    { value: "weighted_round_robin", label: "Weighted Round Robin" },
     { value: "ip_hash", label: "IP Hash" },
 ];
 
@@ -135,36 +135,38 @@ export default function Simulations() {
 
                 <form onSubmit={handleCreate} className="space-y-4">
                     {/* Name Input */}
-                    <div>
-                        <label className="block text-sm font-medium text-text-primary mb-2">
-                            Simulation Name
-                        </label>
-                        <input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className="w-full rounded-lg border border-border-primary bg-bg-primary px-3 py-2 text-black placeholder-text-dim focus:border-accent1 focus:outline-none"
-                            placeholder="Enter simulation name"
-                            required
-                        />
-                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-text-primary mb-2">
+                                Simulation Name
+                            </label>
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                className="w-full rounded-lg border border-border-primary bg-bg-primary px-3 py-2 text-black placeholder-text-dim focus:border-accent1 focus:outline-none"
+                                placeholder="Enter simulation name"
+                                required
+                            />
+                        </div>
 
-                    {/* Algorithm Select */}
-                    <div>
-                        <label className="block text-sm font-medium text-text-primary mb-2">
-                            Load Balancing Algorithm
-                        </label>
-                        <select
-                            value={algorithm}
-                            onChange={(e) => setAlgorithm(e.target.value)}
-                            className="w-full rounded-lg border border-border-primary bg-bg-primary px-3 py-2 text-black focus:border-accent1 focus:outline-none"
-                        >
-                            {ALGORITHM_OPTIONS.map((opt) => (
-                                <option key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                </option>
-                            ))}
-                        </select>
+                        {/* Algorithm Select */}
+                        <div>
+                            <label className="block text-sm font-medium text-text-primary mb-2">
+                                Load Balancing Algorithm
+                            </label>
+                            <select
+                                value={algorithm}
+                                onChange={(e) => setAlgorithm(e.target.value)}
+                                className="w-full rounded-lg border border-border-primary bg-bg-primary px-3 py-2 text-black focus:border-accent1 focus:outline-none"
+                            >
+                                {ALGORITHM_OPTIONS.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
 
                     {/* Traffic Waves */}

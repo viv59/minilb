@@ -1,7 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from core.load_balancer import LoadBalancer
 from core.logger import logger
-from core.log_cleanup_scheduler import start_log_cleanup_scheduler, stop_log_cleanup_scheduler
 # import httpx
 from database.database import Base,engine
 from api.routes.server import router as server_router
@@ -22,19 +21,6 @@ app = FastAPI(
     },
 )
 
-
-@app.on_event("startup")
-async def startup_event():
-    logger.info("Application starting up...")
-    start_log_cleanup_scheduler()
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    logger.info("Application shutting down...")
-    stop_log_cleanup_scheduler()
-
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # tighten this for production
@@ -49,6 +35,11 @@ app.include_router(simulation_router)
 @app.get("/")
 def root():
     return {"message": "minilb backend is running..."}
+
+@app.get("/ip")
+def get_client_ip(request: Request):
+    client_ip = request.client.host
+    return client_ip
 
 # # Initialize Load Balancer
 # lb = LoadBalancer()

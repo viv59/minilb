@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 
 class ServerCreate(BaseModel):
@@ -48,6 +48,9 @@ from datetime import datetime
 
 
 class ServerHealthOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+
     active_connections: int
     current_requests: int
     response_time_ms: Optional[float]
@@ -58,11 +61,13 @@ class ServerHealthOut(BaseModel):
     network_usage: Optional[float]
     last_health_check: Optional[datetime]
 
-    class Config:
-        orm_mode = True  # orm_mode in Pydantic v1
+    # class Config:
+    #     orm_mode = True  # orm_mode in Pydantic v1
 
 
 class ServerOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
     hostname: Optional[str]
@@ -90,8 +95,8 @@ class ServerOut(BaseModel):
 
     health: Optional[ServerHealthOut]
 
-    class Config:
-        orm_mode = True
+    # class Config:
+    #     orm_mode = True
 
 class TrafficWave(BaseModel):
     wave: int
@@ -106,6 +111,8 @@ class SimulationCreate(BaseModel):
 
 
 class SimulationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
     algorithm: str
@@ -113,5 +120,5 @@ class SimulationOut(BaseModel):
     traffic_waves: list
     result_summary: Optional[dict] = None
 
-    class Config:
-        orm_mode = True
+    # class Config:
+    #     orm_mode = True

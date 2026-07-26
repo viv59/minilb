@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session, joinedload
 
 from database.database import get_db
@@ -33,7 +33,7 @@ def create_server(server: ServerCreate, db: Session = Depends(get_db)):
 @router.get("/")
 def get_servers(db: Session = Depends(get_db)):
 
-    logger.info("Get all servers!!!!")
+    logger.info("Get all servers")
 
     servers = (
         db.query(Server)

@@ -64,7 +64,7 @@ class LoadBalancer:
 
     ALGORITHMS = {
         "round_robin": RoundRobin,
-        "weighted": WeightedRoundRobin,
+        "weighted_round_robin": WeightedRoundRobin,
         "least_connections": LeastConnections,
         "weighted_least_connections": WeightedLeastConnections,
     }

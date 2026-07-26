@@ -228,3 +228,5 @@ test_ws.py
 test.json
 
 simulation_api_format.txt
+
+logs/
