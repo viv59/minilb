@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
-
+from datetime import datetime
 class ServerCreate(BaseModel):
     name: str
     hostname: Optional[str] = None
@@ -41,11 +41,6 @@ class ServerUpdate(BaseModel):
     datacenter: Optional[str] = None
 
     supports_sticky_session: Optional[bool] = None
-
-from pydantic import BaseModel
-from typing import Optional
-from datetime import datetime
-
 
 class ServerHealthOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -119,6 +114,7 @@ class SimulationOut(BaseModel):
     status: str
     traffic_waves: list
     result_summary: Optional[dict] = None
+    created_at: datetime
 
     # class Config:
     #     orm_mode = True

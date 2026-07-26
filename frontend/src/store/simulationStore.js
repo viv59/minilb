@@ -1,8 +1,11 @@
 import { create } from "zustand";
 import { simulationApi } from "../api/simulationApi.js";
 import { SimulationSocket } from "../services/simulationSocket.js";
+import { useToastStore } from "../store/ToastStore.js";
 
 let socketInstance = null;
+
+const { showToast } = useToastStore.getState();
 
 function sumRequests(traffic_waves = []) {
     return traffic_waves.reduce((sum, w) => sum + (w.requests ?? 0), 0);
@@ -47,6 +50,11 @@ export const useSimulationStore = create((set, get) => ({
             summary: null,
             lastRoutedEvent: null,
         }));
+        showToast({
+            variant: "success",
+            // title: "Simulation Created",
+            message: `${sim.name} was created successfully.`,
+        });
         return sim;
     },
 
@@ -69,6 +77,11 @@ export const useSimulationStore = create((set, get) => ({
         });
 
         get().connectSocket(id);
+        showToast({
+            variant: "info",
+            // title: "Simulation Created",
+            message: `Simulation started successfully.`,
+        });
     },
 
     stopSimulation: async (id) => {
@@ -77,6 +90,11 @@ export const useSimulationStore = create((set, get) => ({
             status: "STOPPED",
         });
         get().disconnectSocket();
+        showToast({
+            variant: "info",
+            // title: "Simulation Created",
+            message: `Simulation stopped successfully.`,
+        });
     },
 
     connectSocket: (id) => {
@@ -138,6 +156,28 @@ export const useSimulationStore = create((set, get) => ({
             set((state) => ({
                 simulations: state.simulations.filter((s) => s.id !== id),
             }));
+            showToast({
+                variant: "warning",
+                // title: "Simulation Removed",
+                message: `Simulation removed successfully.`,
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    },
+
+    duplicateSimulation: async (id) => {
+        try {
+            const sim = await simulationApi.duplicate(id);
+
+            set((state) => ({
+                simulations: [...state.simulations, sim],
+            }));
+            showToast({
+                variant: "success",
+                // title: "Simulation Removed",
+                message: `Duplicate simulation created successfully.`,
+            });
         } catch (err) {
             console.error(err);
         }

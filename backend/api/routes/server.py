@@ -8,6 +8,8 @@ from models.schema import ServerCreate, ServerUpdate
 from core.logger import logger
 from core.load_balancer import LoadBalancer, build_runtime_servers
 
+import httpx
+
 router = APIRouter(prefix="/servers", tags=["Servers"])
 
 load_balancer = LoadBalancer()
@@ -111,8 +113,6 @@ def delete_server(server_id: int, db: Session = Depends(get_db)):
 #         "selected_server": server.name,
 #         "server_id": server.id
 #     }
-
-import httpx
 
 @router.post("/route-request")
 async def route_request(db: Session = Depends(get_db)):

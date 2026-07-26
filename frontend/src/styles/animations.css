@@ -20,3 +20,30 @@
 .animate-fade-in {
   animation: fade-in 0.2s ease-out;
 }
+
+@keyframes slideInOut {
+    0% {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+
+    10% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    85% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+}
+
+.toast-slide {
+    animation: slideInOut 2.3s ease forwards;
+    pointer-events: auto;
+}

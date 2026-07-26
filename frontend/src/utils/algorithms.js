@@ -12,3 +12,16 @@ export function pickRoundRobin(servers, previousIndex) {
   const nextIndex = (previousIndex + 1) % servers.length
   return { server: servers[nextIndex], index: nextIndex }
 }
+
+export function getServerColor(name) {
+    let hash = 0;
+
+    for (let i = 0; i < name.length; i++) {
+        hash = ((hash << 5) - hash + name.charCodeAt(i)) | 0;
+    }
+
+    // Spread hues uniformly around the color wheel
+    const hue = (Math.abs(hash) * 137.508) % 360;
+
+    return `hsl(${hue}, 68%, 56%)`;
+}

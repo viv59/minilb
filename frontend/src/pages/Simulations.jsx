@@ -5,6 +5,7 @@ import Card from "../components/common/Card.jsx";
 import Button from "../components/common/Button.jsx";
 import Loader from "../components/common/Loader.jsx";
 import { useSimulation } from "../hooks/useSimulation.js";
+import { useServers } from '../hooks/useServers.js'
 
 const ALGORITHM_OPTIONS = [
     { value: "round_robin", label: "Round Robin" },
@@ -28,13 +29,16 @@ export default function Simulations() {
     const [name, setName] = useState(generateSimulationName());
     const [algorithm, setAlgorithm] = useState("least_connections");
     const [waves, setWaves] = useState([
-        { wave: 1, requests: 20, interval_ms: 10 },
+        { wave: 1, requests: 100, interval_ms: 50 },
     ]);
     const [submitting, setSubmitting] = useState(false);
     const [createError, setCreateError] = useState(null);
 
+    const { servers, fetchServers } = useServers()
+
     useEffect(() => {
         fetchSimulations();
+        fetchServers();
     }, []);
 
     function updateWave(index, patch) {
@@ -76,7 +80,7 @@ export default function Simulations() {
             // setName("demo-run");
             setName(generateSimulationName());
             setAlgorithm("round_robin");
-            setWaves([{ wave: 1, requests: 20, interval_ms: 10 }]);
+            setWaves([{ wave: 1, requests: 100, interval_ms: 50 }]);
 
             // Refetch simulations
             await fetchSimulations();
@@ -255,7 +259,7 @@ export default function Simulations() {
             </Card>
 
             {/* List of Created Simulations */}
-            <Card className="bg-bg-secondary border border-border-primary rounded-lg p-6">
+            {/* <Card className="bg-bg-secondary border border-border-primary rounded-lg p-6">
                 <h2 className="mb-4 text-base font-semibold text-text-primary">
                     Available Simulations
                 </h2>
@@ -347,7 +351,106 @@ export default function Simulations() {
                         </table>
                     </div>
                 )}
-            </Card>
+            </Card> */}
+            <div className="flex flex-col gap-4">
+                <h2 className="text-sm font-medium text-text-dim">
+                    Available simulations
+                </h2>
+ 
+                {loading ? (
+                    <div className="flex justify-center py-12">
+                        <Loader size={20} />
+                    </div>
+                ) : error ? (
+                    <div className="py-4 text-sm text-status-red">
+                        {error}
+                    </div>
+                ) : createdSimulations.length === 0 ? (
+                    <div className="py-12 text-center text-sm text-text-dim">
+                        No simulations created yet
+                    </div>
+                ) : (
+                    <table className="w-full border-collapse text-sm">
+                        <thead>
+                            <tr className="border-b border-border-primary text-left text-text-dim">
+                                <th className="py-2 pr-4 font-medium">
+                                    Name
+                                </th>
+                                <th className="py-2 pr-4 font-medium">
+                                    Algorithm
+                                </th>
+                                <th className="py-2 pr-4 font-medium">
+                                    Waves
+                                </th>
+                                <th className="py-2 pr-4 font-medium">
+                                    Requests
+                                </th>
+                                <th className="py-2 pr-4 font-medium">
+                                    Created
+                                </th>
+                                <th className="py-2 pr-4 text-right font-medium">
+                                    Action
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {createdSimulations.map((sim) => {
+                                const totalReqs =
+                                    sim.traffic_waves?.reduce(
+                                        (sum, w) => sum + (w.requests ?? 0),
+                                        0,
+                                    ) ?? 0;
+ 
+                                return (
+                                    <tr
+                                        key={sim.id}
+                                        className="border-b border-border-primary/50 text-text-primary"
+                                    >
+                                        <td className="py-2.5 pr-4">
+                                            {sim.name}
+                                        </td>
+                                        <td className="py-2.5 pr-4 text-text-dim">
+                                            {sim.algorithm}
+                                        </td>
+                                        <td className="py-2.5 pr-4 text-text-dim">
+                                            {sim.traffic_waves?.length ?? 0}
+                                        </td>
+                                        <td className="py-2.5 pr-4 text-text-dim">
+                                            {totalReqs}
+                                        </td>
+                                        <td className="py-2.5 pr-4 text-text-dim">
+                                            {sim.created_at
+                                                ? `${new Date(`${sim.created_at}Z`).toLocaleDateString("en-IN", {
+                                                    day: "2-digit",
+                                                    month: "short",
+                                                    timeZone: "Asia/Kolkata",
+                                                })} ${new Date(`${sim.created_at}Z`).toLocaleTimeString("en-IN", {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit",
+                                                    timeZone: "Asia/Kolkata",
+                                                })}`
+                                                : "-"}
+                                        </td>
+                                        <td className="py-2.5 pr-4">
+                                            <div className="flex justify-end">
+                                                <button
+                                                    onClick={() =>
+                                                        handleStart(sim.id)
+                                                    }
+                                                    className="flex items-center gap-1.5 text-text-dim hover:text-accent1"
+                                                    title="Start"
+                                                >
+                                                    <Play size={15} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                )}
+            </div>
         </div>
     );
 }

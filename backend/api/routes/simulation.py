@@ -131,6 +131,33 @@ def delete_logs(sim_id: int, db: Session = Depends(get_db)):
     else:
         raise HTTPException(404, "No logs found for this simulation")
 
+@router.post("/{sim_id}/duplicate",response_model=SimulationOut)
+def duplicate_simulation(sim_id: int, db: Session = Depends(get_db)):
+    original = (
+        db.query(Simulation)
+        .filter(Simulation.id == sim_id)
+        .first()
+    )
+
+    if not original:
+        raise HTTPException(
+            status_code=404,
+            detail="Simulation not found"
+        )
+
+    duplicate = Simulation(
+        name=f"{original.name}_dup",
+        algorithm=original.algorithm,
+        traffic_waves=original.traffic_waves,
+        status=SimulationStatus.CREATED
+    )
+
+    db.add(duplicate)
+    db.commit()
+    db.refresh(duplicate)
+
+    return duplicate
+
 
 @router.delete("/")
 def delete_all_simulations(db: Session = Depends(get_db)):

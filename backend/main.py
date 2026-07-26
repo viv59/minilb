@@ -5,6 +5,7 @@ from core.logger import logger
 from database.database import Base,engine
 from api.routes.server import router as server_router
 from api.routes.simulation import router as simulation_router
+from api.routes.statistics import router as stats_router
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -31,6 +32,7 @@ app.add_middleware(
 
 app.include_router(server_router)
 app.include_router(simulation_router)
+app.include_router(stats_router)
 
 @app.get("/")
 def root():
