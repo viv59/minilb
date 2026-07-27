@@ -115,7 +115,10 @@ def delete_server(server_id: int, db: Session = Depends(get_db)):
 #     }
 
 @router.post("/route-request")
-async def route_request(db: Session = Depends(get_db)):
+async def route_request( request: Request, db: Session = Depends(get_db)):
+
+    client_ip = request.client.host
+
     db_servers = (
         db.query(Server)
         .options(joinedload(Server.health))
@@ -125,7 +128,7 @@ async def route_request(db: Session = Depends(get_db)):
 
     runtime_servers = build_runtime_servers(db_servers)
     load_balancer.set_servers(runtime_servers)
-    server = load_balancer.get_next_server()
+    server = load_balancer.get_next_server(client_ip=client_ip)
 
     if server is None:
         raise HTTPException(status_code=404, detail="No healthy servers available")

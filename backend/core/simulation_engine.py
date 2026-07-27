@@ -1,6 +1,7 @@
 import asyncio
 import itertools
 import time
+import random
 
 import httpx
 
@@ -42,6 +43,11 @@ class SimulationEngine:
         # them to actually finish before persisting the final summary
         self._pending_tasks: set[asyncio.Task] = set()
         self._http_client = httpx.AsyncClient(timeout=5.0)
+
+        # synthetic client identities - only meaningful for ip_hash /
+        # consistent_hash, but harmless to generate regardless since
+        # every other algorithm's get_server() ignores client_ip entirely
+        self._synthetic_ips = [f"10.0.0.{i}" for i in range(1, 21)]
 
         self.sim_logger.info(f"Simulation {simulation_id} initialized")
         self.sim_logger.info(f"Servers: {[s.name for s in servers]}")
@@ -107,7 +113,8 @@ class SimulationEngine:
             if self._cancelled:
                 return
 
-            server = self.lb.get_next_server()  # already increments active_connections
+            client_ip = random.choice(self._synthetic_ips)
+            server = self.lb.get_next_server(client_ip=client_ip)  # already increments active_connections
             request_id = next(self.request_counter)
             self.total_processed += 1
 
@@ -124,7 +131,9 @@ class SimulationEngine:
                 "total_processed": self.total_processed,
             })
 
-            self.sim_logger.info(f"Request {request_id} routed to {server.name if server else 'none'}")
+            self.sim_logger.info(
+                f"Request {request_id} from {client_ip} routed to {server.name if server else 'none'}"
+            )
 
             if server:
                 # fire the real call as a background task - this is what

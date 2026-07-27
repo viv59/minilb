@@ -8,11 +8,12 @@ import { useSimulation } from "../hooks/useSimulation.js";
 import { useServers } from '../hooks/useServers.js'
 
 const ALGORITHM_OPTIONS = [
-    { value: "round_robin", label: "Round Robin" },
-    { value: "least_connections", label: "Least Connections" },
-    { value: "weighted_least_connections", label: "Weighted Least Connections" },
-    { value: "weighted_round_robin", label: "Weighted Round Robin" },
-    { value: "ip_hash", label: "IP Hash" },
+    { value: "round_robin", label: "Round Robin", short_form: "RR" },
+    { value: "least_connections", label: "Least Connections", short_form: "LC" },
+    { value: "weighted_least_connections", label: "Weighted Least Connections", short_form: "WLC" },
+    { value: "weighted_round_robin", label: "Weighted Round Robin", short_form: "WRR" },
+    { value: "ip_hash", label: "IP Hash", short_form: "IH"},
+    { value: "consistent_hash", label: "Consistent Hash", short_form: "CH" },
 ];
 
 export default function Simulations() {
@@ -26,8 +27,13 @@ export default function Simulations() {
         startSimulation,
     } = useSimulation();
 
-    const [name, setName] = useState(generateSimulationName());
-    const [algorithm, setAlgorithm] = useState("least_connections");
+    const [name, setName] = useState(() => {
+        const short =
+            ALGORITHM_OPTIONS.find(a => a.value === "round_robin")?.short_form ?? "";
+
+        return generateSimulationName("Sim", short);
+    });
+    const [algorithm, setAlgorithm] = useState("round_robin");
     const [waves, setWaves] = useState([
         { wave: 1, requests: 100, interval_ms: 50 },
     ]);
@@ -40,6 +46,13 @@ export default function Simulations() {
         fetchSimulations();
         fetchServers();
     }, []);
+
+    useEffect(() => {
+        const short =
+            ALGORITHM_OPTIONS.find(a => a.value === algorithm)?.short_form ?? "";
+
+        setName(generateSimulationName("Sim", short));
+    }, [algorithm]);
 
     function updateWave(index, patch) {
         setWaves((prev) =>
@@ -78,7 +91,12 @@ export default function Simulations() {
 
             // Reset form
             // setName("demo-run");
-            setName(generateSimulationName());
+
+            const short = ALGORITHM_OPTIONS.find(a => a.value === "round_robin")?.short_form ?? "";
+
+            setName(generateSimulationName("Sim", short));
+
+            // setName(generateSimulationName("rr"));
             setAlgorithm("round_robin");
             setWaves([{ wave: 1, requests: 100, interval_ms: 50 }]);
 
@@ -105,7 +123,7 @@ export default function Simulations() {
         (s) => s.status === "CREATED",
     );
 
-    function generateSimulationName(prefix = "sim"){
+    function generateSimulationName(prefix = "Sim", shortForm = ""){
         const now = new Date();
 
         const date = `${String(now.getDate()).padStart(2, "0")}` +
@@ -118,7 +136,7 @@ export default function Simulations() {
                      `${String(now.getMinutes()).padStart(2, "0")}` +
                      `${String(now.getSeconds()).padStart(2, "0")}`;
 
-        return `${prefix}_${date}${time}`;
+        return `${prefix}${shortForm}_${date}${time}`;
     }
 
     return (

@@ -1,8 +1,10 @@
+from core.algorithms.consistent_hash import ConsistentHash
+from core.algorithms.ip_hash import IPHash
 from core.algorithms.round_robin import RoundRobin
 from core.algorithms.weighted_round_robin import WeightedRoundRobin
 from core.algorithms.least_connections import LeastConnections
 from core.algorithms.weighted_least_connections import WeightedLeastConnections
-
+import inspect
 
 class RuntimeServer:
     """
@@ -67,6 +69,8 @@ class LoadBalancer:
         "weighted_round_robin": WeightedRoundRobin,
         "least_connections": LeastConnections,
         "weighted_least_connections": WeightedLeastConnections,
+        "ip_hash": IPHash,
+        "consistent_hash": ConsistentHash,
     }
 
     def __init__(self, algorithm: str = "round_robin"):
@@ -95,18 +99,22 @@ class LoadBalancer:
                 server.active_connections = self._connection_counts[server.id]
         self.servers = servers
 
-    def get_next_server(self):
+    def get_next_server(self, client_ip: str = None):
         healthy_servers = [s for s in self.servers if s.healthy]
         if not healthy_servers:
             return None
 
         # sync live counts onto the runtime objects before the algorithm
-    # reads them - without this, LeastConnections always sees stale data
+        # reads them - without this, LeastConnections always sees stale data
         for s in healthy_servers:
             if s.id in self._connection_counts:
                 s.active_connections = self._connection_counts[s.id]
 
-        server = self.algorithm.get_server(healthy_servers)
+        if "client_ip" in inspect.signature(self.algorithm.get_server).parameters:
+            server = self.algorithm.get_server(healthy_servers, client_ip=client_ip)
+        else:
+            server = self.algorithm.get_server(healthy_servers)
+
         if server is not None:
             self._connection_counts[server.id] = self._connection_counts.get(server.id, 0) + 1
             server.active_connections = self._connection_counts[server.id]  # keep it in sync immediately too
