@@ -48,6 +48,7 @@ class SimulationEngine:
         # consistent_hash, but harmless to generate regardless since
         # every other algorithm's get_server() ignores client_ip entirely
         self._synthetic_ips = [f"10.0.0.{i}" for i in range(1, 21)]
+        self._synthetic_sessions = [f"session-{i}" for i in range(1, 21)]
 
         self.sim_logger.info(f"Simulation {simulation_id} initialized")
         self.sim_logger.info(f"Servers: {[s.name for s in servers]}")
@@ -114,7 +115,9 @@ class SimulationEngine:
                 return
 
             client_ip = random.choice(self._synthetic_ips)
-            server = self.lb.get_next_server(client_ip=client_ip)  # already increments active_connections
+            session_id = random.choice(self._synthetic_sessions)
+
+            server = self.lb.get_next_server(client_ip=client_ip,session_id=session_id)  # already increments active_connections
             request_id = next(self.request_counter)
             self.total_processed += 1
 
@@ -126,13 +129,17 @@ class SimulationEngine:
                 "request_id": request_id,
                 "server_id": server.id if server else None,
                 "server_name": server.name if server else None,
+                "algorithm": self.algorithm,
+                "client_ip": client_ip,
+                "session_id": session_id,
                 "wave": wave["wave"],
                 "distribution": self.distribution,
                 "total_processed": self.total_processed,
+                "total_requests": self.total_requests,
             })
 
             self.sim_logger.info(
-                f"Request {request_id} from {client_ip} routed to {server.name if server else 'none'}"
+                f"Request {request_id} (session={session_id}, ip={client_ip}) routed to {server.name if server else 'none'}"
             )
 
             if server:
@@ -167,6 +174,7 @@ class SimulationEngine:
                 "wave": wave,
                 "duration_ms": duration_ms,
                 "success": True,
+                "error": None,
             })
         except httpx.HTTPError as e:
             duration_ms = round((time.time() - start) * 1000)

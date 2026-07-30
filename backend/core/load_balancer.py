@@ -4,6 +4,7 @@ from core.algorithms.round_robin import RoundRobin
 from core.algorithms.weighted_round_robin import WeightedRoundRobin
 from core.algorithms.least_connections import LeastConnections
 from core.algorithms.weighted_least_connections import WeightedLeastConnections
+from core.algorithms.sticky_session import StickySessions
 import inspect
 
 class RuntimeServer:
@@ -71,6 +72,7 @@ class LoadBalancer:
         "weighted_least_connections": WeightedLeastConnections,
         "ip_hash": IPHash,
         "consistent_hash": ConsistentHash,
+        "sticky_session": StickySessions,
     }
 
     def __init__(self, algorithm: str = "round_robin"):
@@ -80,6 +82,7 @@ class LoadBalancer:
         # process restart - DB snapshot fills the gap until the LB has
         # routed to a server at least once since startup.
         self._connection_counts: dict[int, int] = {}
+        self._sticky_map: dict[str, int] = {}
 
     def set_algorithm(self, algorithm: str):
         """Swap algorithms at runtime, e.g. from an admin endpoint."""
@@ -99,7 +102,7 @@ class LoadBalancer:
                 server.active_connections = self._connection_counts[server.id]
         self.servers = servers
 
-    def get_next_server(self, client_ip: str = None):
+    def get_next_server(self, client_ip: str = None, session_id: str = None):
         healthy_servers = [s for s in self.servers if s.healthy]
         if not healthy_servers:
             return None
@@ -110,14 +113,19 @@ class LoadBalancer:
             if s.id in self._connection_counts:
                 s.active_connections = self._connection_counts[s.id]
 
-        if "client_ip" in inspect.signature(self.algorithm.get_server).parameters:
-            server = self.algorithm.get_server(healthy_servers, client_ip=client_ip)
-        else:
-            server = self.algorithm.get_server(healthy_servers)
+        params = inspect.signature(self.algorithm.get_server).parameters
+        kwargs = {}
+        if "client_ip" in params:
+            kwargs["client_ip"] = client_ip
+        if "session_id" in params:
+            kwargs["session_id"] = session_id
+            kwargs["sticky_map"] = self._sticky_map
+
+        server = self.algorithm.get_server(healthy_servers, **kwargs)
 
         if server is not None:
             self._connection_counts[server.id] = self._connection_counts.get(server.id, 0) + 1
-            server.active_connections = self._connection_counts[server.id]  # keep it in sync immediately too
+            server.active_connections = self._connection_counts[server.id]
         return server
 
 

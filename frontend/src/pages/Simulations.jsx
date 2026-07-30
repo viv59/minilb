@@ -14,6 +14,7 @@ const ALGORITHM_OPTIONS = [
     { value: "weighted_round_robin", label: "Weighted Round Robin", short_form: "WRR" },
     { value: "ip_hash", label: "IP Hash", short_form: "IH"},
     { value: "consistent_hash", label: "Consistent Hash", short_form: "CH" },
+    { value: "sticky_session", label: "Sticky Session", short_form: "SS" },
 ];
 
 export default function Simulations() {

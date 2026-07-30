@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session, joinedload
 
+from services.filter_engine import FilterError, FilterInput, _allowed_ops_for_column, build_filter
 from database.database import get_db
 from models.db_model import Server, ServerHealth
 from models.schema import ServerCreate, ServerUpdate
 
 from core.logger import logger
 from core.load_balancer import LoadBalancer, build_runtime_servers
+from typing import Dict, List
 
 import httpx
 
@@ -149,3 +151,33 @@ async def route_request( request: Request, db: Session = Depends(get_db)):
         "server_id": server.id,
         "backend_response": backend_data,
     }
+
+@router.post("/filter")
+def filter_servers(
+    payload: FilterInput,
+    limit: int = Query(50, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    try:
+        expr = build_filter(Server, payload)
+    except FilterError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    query = db.query(Server).filter(expr)
+    total = query.count()
+    items = query.offset(offset).limit(limit).all()
+
+    return {
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "items": items,
+    }
+
+@router.get("/filter/fields", response_model=Dict[str, List[str]])
+def list_filterable_fields():
+    result = {}
+    for column in Server.__table__.columns:
+        result[column.name] = [op.value for op in _allowed_ops_for_column(column)]
+    return result
