@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session, joinedload
 
-from services.filter_engine import FilterError, FilterInput, _allowed_ops_for_column, build_filter
+from services.filter_engine import FilterError, FilterInput, _allowed_ops_for_column, build_filter, describe_model_fields
 from database.database import get_db
 from models.db_model import Server, ServerHealth
 from models.schema import ServerCreate, ServerUpdate
@@ -155,29 +155,33 @@ async def route_request( request: Request, db: Session = Depends(get_db)):
 @router.post("/filter")
 def filter_servers(
     payload: FilterInput,
-    limit: int = Query(50, le=100),
+    limit: int = Query(50, le=500),
     offset: int = Query(0, ge=0),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     try:
         expr = build_filter(Server, payload)
     except FilterError as e:
         raise HTTPException(status_code=422, detail=str(e))
-
-    query = db.query(Server).filter(expr)
-    total = query.count()
-    items = query.offset(offset).limit(limit).all()
-
+ 
+    query = db.query(Server).options(joinedload(Server.health)).filter(expr)
+    servers = query.order_by(Server.id.desc()).offset(offset).limit(limit).all()
+ 
+    if not servers:
+        return {"message": "No server found!", "count": 0, "servers": []}
+ 
     return {
-        "total": total,
-        "limit": limit,
-        "offset": offset,
-        "items": items,
+        "count": len(servers),
+        "servers": servers,
     }
-
-@router.get("/filter/fields", response_model=Dict[str, List[str]])
+ 
+ 
+@router.get("/filter/fields")
 def list_filterable_fields():
-    result = {}
-    for column in Server.__table__.columns:
-        result[column.name] = [op.value for op in _allowed_ops_for_column(column)]
-    return result
+    """
+    Tells your frontend which fields exist, each field's type (boolean /
+    number / string / date), and which operators are valid for it, so it
+    can render a ServiceNow-style "field -> operator -> value" picker
+    dynamically instead of hardcoding it.
+    """
+    return describe_model_fields(Server)

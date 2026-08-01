@@ -49,10 +49,29 @@ function normalizeServer(raw) {
   }
 }
 
+// The backend's /servers/filter/fields endpoint returns, per field:
+//   { [fieldName]: { type: "string"|"number"|"boolean"|"date", operators: [...] } }
+// This drives which input control + operator dropdown the UI renders per field.
+// No normalization needed - field names here are used directly as filter
+// keys sent back to the backend, so they must stay snake_case (matching
+// the SQLAlchemy model), unlike normalizeServer's camelCase output.
+function normalizeFilterFields(raw) {
+  return raw
+}
+
 export const serverApi = {
   list: () => api.get('/servers').then((r) => r.data.servers.map(normalizeServer)),
   get: (id) => api.get(`/servers/${id}`).then((r) => normalizeServer(r.data)),
   create: (payload) => api.post('/servers/', payload).then((r) => normalizeServer(r.data.server)),
   update: (id, patch) => api.put(`/servers/${id}`, patch).then((r) => normalizeServer(r.data.server)),
   remove: (id) => api.delete(`/servers/${id}`).then((r) => r.data),
+
+  // --- filtering ---
+
+  // { fieldName: { type, operators: [] } }
+  filterFields: () => api.get('/servers/filter/fields').then((r) => normalizeFilterFields(r.data)),
+
+  // filterPayload is a FilterGroup: { logic: "AND", conditions: [{field, operator, value}, ...] }
+  filter: (filterPayload) =>
+    api.post('/servers/filter', filterPayload).then((r) => (r.data.servers ?? []).map(normalizeServer)),
 }

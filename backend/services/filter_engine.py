@@ -130,6 +130,39 @@ def _allowed_ops_for_column(column) -> set:
     return STRING_OPS  # safe fallback for unknown types
 
 
+# Maps SQLAlchemy type -> a simple label the frontend can use to pick an
+# input control (checkbox / number input / text input / date picker).
+_TYPE_LABEL_MAP = [
+    (Boolean, "boolean"),
+    (Integer, "number"),
+    (Numeric, "number"),
+    (DateTime, "date"),
+    (String, "string"),
+]
+
+
+def _field_type_label(column) -> str:
+    col_type = column.type
+    for sa_type, label in _TYPE_LABEL_MAP:
+        if isinstance(col_type, sa_type):
+            return label
+    return "string"
+
+
+def describe_model_fields(model: DeclarativeMeta) -> dict:
+    """
+    Returns {field_name: {"type": "...", "operators": [...]}} for every
+    column on the model. Used to drive a dynamic filter UI.
+    """
+    result = {}
+    for column in model.__table__.columns:
+        result[column.name] = {
+            "type": _field_type_label(column),
+            "operators": [op.value for op in _allowed_ops_for_column(column)],
+        }
+    return result
+
+
 def _condition_to_expr(model: DeclarativeMeta, cond: FilterCondition) -> ColumnElement:
     if not hasattr(model, cond.field):
         raise FilterError(f"Unknown field '{cond.field}' on {model.__name__}")
