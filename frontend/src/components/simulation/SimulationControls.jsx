@@ -5,12 +5,12 @@ import Card from "../common/Card.jsx";
 import Button from "../common/Button.jsx";
 import { useSimulation } from "../../hooks/useSimulation.js";
 
-const ALGORITHM_OPTIONS = [
-    { value: "round_robin", label: "Round Robin" },
-    { value: "least_connections", label: "Least Connections" },
-    { value: "weighted", label: "Weighted" },
-    { value: "ip_hash", label: "IP Hash" },
-];
+// const ALGORITHM_OPTIONS = [
+//     { value: "round_robin", label: "Round Robin" },
+//     { value: "least_connections", label: "Least Connections" },
+//     { value: "weighted", label: "Weighted" },
+//     { value: "ip_hash", label: "IP Hash" },
+// ];
 
 const STATUS_STYLES = {
     CREATED: "text-text-dim",

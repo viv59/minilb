@@ -1,3 +1,4 @@
+from core.algorithms.least_response_time import LeastResponseTime
 from core.algorithms.consistent_hash import ConsistentHash
 from core.algorithms.ip_hash import IPHash
 from core.algorithms.round_robin import RoundRobin
@@ -72,7 +73,8 @@ class LoadBalancer:
         "weighted_least_connections": WeightedLeastConnections,
         "ip_hash": IPHash,
         "consistent_hash": ConsistentHash,
-        "sticky_session": StickySessions,
+        "sticky_session": lambda: StickySessions(fallback=LeastConnections()),
+        "least_response_time": LeastResponseTime,
     }
 
     def __init__(self, algorithm: str = "round_robin"):
@@ -83,6 +85,16 @@ class LoadBalancer:
         # routed to a server at least once since startup.
         self._connection_counts: dict[int, int] = {}
         self._sticky_map: dict[str, int] = {}
+
+        self._response_times: dict[int, float] = {}
+        self._ema_alpha = 0.3 # higher = reacts faster to recent changes, lower = smoother/slower
+
+        # per-server running totals, used to compute average_latency_ms
+        # (true average, distinct from the EMA) and error_rate
+        self._latency_sum: dict[int, float] = {}
+        self._latency_count: dict[int, int] = {}
+        self._error_count: dict[int, int] = {}
+        self._request_count: dict[int, int] = {}
 
     def set_algorithm(self, algorithm: str):
         """Swap algorithms at runtime, e.g. from an admin endpoint."""
@@ -112,6 +124,9 @@ class LoadBalancer:
         for s in healthy_servers:
             if s.id in self._connection_counts:
                 s.active_connections = self._connection_counts[s.id]
+                s.current_requests = self._connection_counts[s.id]
+            if s.id in self._response_times:
+                s.response_time_ms = self._response_times[s.id]
 
         params = inspect.signature(self.algorithm.get_server).parameters
         kwargs = {}
@@ -126,6 +141,7 @@ class LoadBalancer:
         if server is not None:
             self._connection_counts[server.id] = self._connection_counts.get(server.id, 0) + 1
             server.active_connections = self._connection_counts[server.id]
+            server.current_requests = self._connection_counts[server.id]
         return server
 
 
@@ -137,4 +153,44 @@ class LoadBalancer:
             for s in self.servers:
                 if s.id == server_id:
                     s.active_connections = self._connection_counts[server_id]
+                    s.current_requests = self._connection_counts[server_id]
                     break
+
+    def record_response_time(self, server_id: int, duration_ms: float, success: bool):
+        # EMA - reacts quickly to recent performance, used for routing decisions
+        prev = self._response_times.get(server_id)
+        self._response_times[server_id] = (
+            duration_ms if prev is None
+            else self._ema_alpha * duration_ms + (1 - self._ema_alpha) * prev
+        )
+
+        # true running average - purely informational, smoother/slower to
+        # change than the EMA, closer to "lifetime average" than "recent trend"
+        self._latency_sum[server_id] = self._latency_sum.get(server_id, 0) + duration_ms
+        self._latency_count[server_id] = self._latency_count.get(server_id, 0) + 1
+
+        self._request_count[server_id] = self._request_count.get(server_id, 0) + 1
+        if not success:
+            self._error_count[server_id] = self._error_count.get(server_id, 0) + 1
+
+        for s in self.servers:
+            if s.id == server_id:
+                s.response_time_ms = self._response_times[server_id]
+                s.average_latency_ms = self._latency_sum[server_id] / self._latency_count[server_id]
+                total = self._request_count[server_id]
+                errors = self._error_count.get(server_id, 0)
+                s.error_rate = errors / total if total else 0.0
+                break
+
+    def record_resource_snapshot(self, server_id: int, cpu_usage=None, memory_usage=None, network_usage=None):
+        """Feed in whatever a server's /health self-reports. Anything not
+        provided is left untouched rather than overwritten with None."""
+        for s in self.servers:
+            if s.id == server_id:
+                if cpu_usage is not None:
+                    s.cpu_usage = cpu_usage
+                if memory_usage is not None:
+                    s.memory_usage = memory_usage
+                if network_usage is not None:
+                    s.network_usage = network_usage
+                break

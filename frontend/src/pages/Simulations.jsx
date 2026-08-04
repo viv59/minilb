@@ -6,16 +6,7 @@ import Button from "../components/common/Button.jsx";
 import Loader from "../components/common/Loader.jsx";
 import { useSimulation } from "../hooks/useSimulation.js";
 import { useServers } from '../hooks/useServers.js'
-
-const ALGORITHM_OPTIONS = [
-    { value: "round_robin", label: "Round Robin", short_form: "RR" },
-    { value: "least_connections", label: "Least Connections", short_form: "LC" },
-    { value: "weighted_least_connections", label: "Weighted Least Connections", short_form: "WLC" },
-    { value: "weighted_round_robin", label: "Weighted Round Robin", short_form: "WRR" },
-    { value: "ip_hash", label: "IP Hash", short_form: "IH"},
-    { value: "consistent_hash", label: "Consistent Hash", short_form: "CH" },
-    { value: "sticky_session", label: "Sticky Session", short_form: "SS" },
-];
+import { ALGORITHM_OPTIONS } from "../utils/algorithms.js";
 
 export default function Simulations() {
     const navigate = useNavigate();
@@ -429,7 +420,8 @@ export default function Simulations() {
                                             {sim.name}
                                         </td>
                                         <td className="py-2.5 pr-4 text-text-dim">
-                                            {sim.algorithm}
+                                            {/* {sim.algorithm} */}
+                                            { ALGORITHM_OPTIONS.find(a => a.value === sim.algorithm)?.label ?? "Unknown Algorithm" }
                                         </td>
                                         <td className="py-2.5 pr-4 text-text-dim">
                                             {sim.traffic_waves?.length ?? 0}

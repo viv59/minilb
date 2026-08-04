@@ -5,6 +5,17 @@ export const ALGORITHMS = [
   { id: 'ip-hash', name: 'IP Hash', description: "Routes a client to the same server based on a hash of the client's IP." },
 ]
 
+export const ALGORITHM_OPTIONS = [
+    { value: "round_robin", label: "Round Robin", short_form: "RR" },
+    { value: "least_connections", label: "Least Connections", short_form: "LC" },
+    { value: "weighted_least_connections", label: "Weighted Least Connections", short_form: "WLC" },
+    { value: "weighted_round_robin", label: "Weighted Round Robin", short_form: "WRR" },
+    { value: "ip_hash", label: "IP Hash", short_form: "IH"},
+    { value: "consistent_hash", label: "Consistent Hash", short_form: "CH" },
+    { value: "sticky_session", label: "Sticky Session", short_form: "SS" },
+    { value: "least_response_time", label: "Least Response Time", short_form: "LRT" },
+];
+
 // Small demo implementation, useful for visualizing routing on the Algorithms page.
 // A real implementation would live server-side, next to your actual proxy.
 export function pickRoundRobin(servers, previousIndex) {

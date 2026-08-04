@@ -2,6 +2,7 @@ import asyncio
 import itertools
 import time
 import random
+from datetime import datetime
 
 import httpx
 
@@ -33,6 +34,14 @@ class SimulationEngine:
         self.lb = LoadBalancer(algorithm)
         self.lb.set_servers(servers)
 
+        # seed live tracking from each server's last known health snapshot,
+        # so the new run doesn't start every algorithm from a blank slate
+        for s in servers:
+            if s.active_connections:
+                self.lb._connection_counts[s.id] = s.active_connections
+            if s.response_time_ms is not None:
+                self.lb._response_times[s.id] = s.response_time_ms
+
         self.request_counter = itertools.count(1)
         self.distribution = {s.name: 0 for s in servers}
         self.total_processed = 0
@@ -61,6 +70,8 @@ class SimulationEngine:
     async def run(self):
         start_time = time.time()
         self.sim_logger.info("Simulation run started")
+
+        await self._poll_all_servers_initial()
 
         for wave in self.waves:
             if self._cancelled:
@@ -101,6 +112,7 @@ class SimulationEngine:
         self.sim_logger.info(f"Distribution: {self.distribution}")
         self.sim_logger.info(f"Summary: {summary}")
 
+        self._persist_health_snapshot()
         self._persist_final(status, summary)
 
         await self.ws_manager.broadcast(self.simulation_id, {
@@ -164,6 +176,8 @@ class SimulationEngine:
             resp.raise_for_status()
             duration_ms = round((time.time() - start) * 1000)
 
+            self.lb.record_response_time(server.id, duration_ms, success=True)
+
             self.sim_logger.info(f"Request {request_id} completed by {server.name} in {duration_ms}ms")
 
             await self.ws_manager.broadcast(self.simulation_id, {
@@ -178,6 +192,9 @@ class SimulationEngine:
             })
         except httpx.HTTPError as e:
             duration_ms = round((time.time() - start) * 1000)
+
+            self.lb.record_response_time(server.id, duration_ms, success=False)
+
             self.sim_logger.error(f"Request {request_id} to {server.name} failed: {e}")
 
             await self.ws_manager.broadcast(self.simulation_id, {
@@ -192,6 +209,23 @@ class SimulationEngine:
             })
         finally:
             self.lb.release_connection(server.id)
+            await self._poll_resource_snapshot(server)
+
+    async def _poll_resource_snapshot(self, server):
+        """Best-effort - hits the mock's /health for cpu/memory/network.
+        Failure here shouldn't fail the request itself, just skip the update."""
+        try:
+            resp = await self._http_client.get(f"{server.url}/health", timeout=2.0)
+            resp.raise_for_status()
+            data = resp.json()
+            self.lb.record_resource_snapshot(
+                server.id,
+                cpu_usage=data.get("cpu_usage"),
+                memory_usage=data.get("memory_usage"),
+                network_usage=data.get("network_usage"),
+            )
+        except httpx.HTTPError:
+            pass  # health check failing shouldn't crash the simulation
 
     def _persist_final(self, status: str, summary: dict):
         db = self.db_session_factory()
@@ -209,3 +243,57 @@ class SimulationEngine:
             self.sim_logger.error(f"Error persisting simulation results: {e}")
         finally:
             db.close()
+
+    def _persist_health_snapshot(self):
+        db = self.db_session_factory()
+        try:
+            from models.db_model import ServerHealth
+            for server in self.servers:
+                health = db.query(ServerHealth).filter(ServerHealth.server_id == server.id).first()
+                if health is None:
+                    health = ServerHealth(server_id=server.id)
+                    db.add(health)
+
+                health.active_connections = self.lb._connection_counts.get(server.id, 0)
+                health.current_requests = health.active_connections
+                if server.id in self.lb._response_times:
+                    health.response_time_ms = self.lb._response_times[server.id]
+                if server.id in self.lb._latency_count:
+                    health.average_latency_ms = self.lb._latency_sum[server.id] / self.lb._latency_count[server.id]
+                total = self.lb._request_count.get(server.id, 0)
+                if total:
+                    health.error_rate = self.lb._error_count.get(server.id, 0) / total
+                if server.cpu_usage is not None:
+                    health.cpu_usage = server.cpu_usage
+                if server.memory_usage is not None:
+                    health.memory_usage = server.memory_usage
+                if server.network_usage is not None:
+                    health.network_usage = server.network_usage
+                health.last_health_check = datetime.utcnow()
+
+            db.commit()
+            self.sim_logger.info("Health snapshot persisted for all servers")
+        except Exception as e:
+            self.sim_logger.error(f"Error persisting health snapshot: {e}")
+            db.rollback()
+        finally:
+            db.close()
+
+    async def _poll_all_servers_initial(self):
+        """Best-effort initial /health poll for every server, run in parallel
+        so simulation start isn't delayed by N sequential HTTP calls."""
+        async def poll_one(server):
+            try:
+                resp = await self._http_client.get(f"{server.url}/health", timeout=2.0)
+                resp.raise_for_status()
+                data = resp.json()
+                self.lb.record_resource_snapshot(
+                    server.id,
+                    cpu_usage=data.get("cpu_usage"),
+                    memory_usage=data.get("memory_usage"),
+                    network_usage=data.get("network_usage"),
+                )
+            except httpx.HTTPError:
+                self.sim_logger.warning(f"Initial health poll failed for {server.name}, starting unmeasured")
+
+        await asyncio.gather(*(poll_one(s) for s in self.servers))

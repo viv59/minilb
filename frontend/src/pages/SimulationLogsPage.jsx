@@ -1,14 +1,16 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Copy, Trash2 } from "lucide-react";
+import { Copy, Trash2, Play } from "lucide-react";
 import Loader from "../components/common/Loader.jsx";
 import { useSimulation } from "../hooks/useSimulation.js";
+import { ALGORITHM_OPTIONS } from "../utils/algorithms.js";
 
 const STATUS_STYLES = {
     COMPLETED: "text-status-green",
     RUNNING: "text-status-yellow",
     STOPPED: "text-status-red",
     FAILED: "text-status-red",
+    CREATED: "text-status-white",
 };
 
 function StatusDot({ status }) {
@@ -21,6 +23,7 @@ function StatusDot({ status }) {
     );
 }
 
+
 export default function SimulationLogsPage() {
     const navigate = useNavigate();
     const {
@@ -30,6 +33,7 @@ export default function SimulationLogsPage() {
         duplicateSimulation,
         loading,
         error,
+        startSimulation,
     } = useSimulation();
 
     useEffect(() => {
@@ -40,6 +44,15 @@ export default function SimulationLogsPage() {
         navigate(`/simulation-log/${sim.id}`, {
             state: { result_summary: sim.result_summary },
         });
+    }
+
+    async function handleStart(simId) {
+        try {
+            await startSimulation(simId);
+            navigate(`/simulation/${simId}`);
+        } catch (err) {
+            setCreateError(err.message || "Failed to start simulation");
+        }
     }
 
     return (
@@ -90,7 +103,8 @@ export default function SimulationLogsPage() {
                                     {sim.name}
                                 </td>
                                 <td className="py-2.5 pr-4 text-text-dim">
-                                    {sim.algorithm}
+                                    {/* {sim.algorithm} */}
+                                    { ALGORITHM_OPTIONS.find(a => a.value === sim.algorithm)?.label ?? "Unknown Algorithm" }
                                 </td>
                                 <td className="py-2.5 pr-4">
                                     <StatusDot status={sim.status} />
@@ -110,11 +124,21 @@ export default function SimulationLogsPage() {
                                 </td>
                                 <td className="py-2.5 pr-4">
                                     <div className="flex justify-end gap-3 text-text-dim">
+                                        {
+                                            sim.status === "CREATED" && (
+                                            <button
+                                                onClick={() => handleStart(sim.id)}
+                                                className="hover:text-accent1"
+                                                title="Start Simulation"
+                                            >
+                                                <Play size={15} />
+                                            </button>
+                                        )}
                                         <button
                                             onClick={() =>
                                                 duplicateSimulation(sim.id)
                                             }
-                                            className="hover:text-text-primary"
+                                            className="hover:text-text-primary hover:text-white"
                                             title="Duplicate simulation"
                                         >
                                             <Copy size={15} />
@@ -128,6 +152,7 @@ export default function SimulationLogsPage() {
                                         >
                                             <Trash2 size={15} />
                                         </button>
+
                                     </div>
                                 </td>
                             </tr>
