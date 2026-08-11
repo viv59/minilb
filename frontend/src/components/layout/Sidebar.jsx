@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { NAV_ITEMS } from "../../utils/constants.js";
 import { useServerStore } from "../../store/serverStore.js";
+import { useAuthStore } from "../../store/authStore.js";
 import { ALGORITHMS } from "../../utils/algorithms.js";
 
 const ICONS = {
@@ -26,6 +27,11 @@ const ICONS = {
 export default function Sidebar() {
     const algorithmIndex = useServerStore((s) => s.algorithmIndex);
     const cycleAlgorithm = useServerStore((s) => s.cycleAlgorithm);
+    const isAdmin = useAuthStore((s) => s.isAdmin());
+
+    // hide admin-only nav items entirely for non-admins, rather than
+    // showing a link that just bounces them back via ProtectedRoute
+    const visibleNavItems = NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin);
 
     return (
         <aside className="flex w-56 flex-shrink-0 flex-col gap-1.5 border-r border-app-border-soft p-3.5">
@@ -38,7 +44,7 @@ export default function Sidebar() {
                 </span>
             </div>
 
-            {NAV_ITEMS.map((item) => {
+            {visibleNavItems.map((item) => {
                 const Icon = ICONS[item.icon];
                 return (
                     <NavLink

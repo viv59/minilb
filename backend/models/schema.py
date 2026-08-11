@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, EmailStr
 from typing import Optional
 from datetime import datetime
 class ServerCreate(BaseModel):
@@ -118,3 +118,19 @@ class SimulationOut(BaseModel):
 
     # class Config:
     #     orm_mode = True
+class UserRegister(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+class UserOut(BaseModel):
+    id: int
+    name: str
+    email: str
+    role: str
+
+    class Config:
+        from_attributes = True
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"

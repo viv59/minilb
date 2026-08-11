@@ -6,6 +6,7 @@ from database.database import Base,engine
 from api.routes.server import router as server_router
 from api.routes.simulation import router as simulation_router
 from api.routes.statistics import router as stats_router
+from api.routes.auth import router as auth_router
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -30,6 +31,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router)
 app.include_router(server_router)
 app.include_router(simulation_router)
 app.include_router(stats_router)

@@ -65,8 +65,8 @@ export const NAV_ITEMS = [
     { label: "Simulations", path: "/simulations", icon: "Play" },
     { label: "Logs", path: "/simulation-logs", icon: "FileText" },
     { label: "Algorithms", path: "/algorithms", icon: "GitBranch" },
-    { label: "Analytics", path: "/analytics", icon: "Activity" },
-    { label: "Settings", path: "/settings", icon: "Settings" },
+    { label: "Analytics", path: "/analytics", icon: "Activity", adminOnly: true },
+    { label: "Settings", path: "/settings", icon: "Settings", adminOnly: true },
 ];
 
 export const API_BASE_URL =

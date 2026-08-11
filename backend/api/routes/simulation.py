@@ -1,6 +1,6 @@
 import asyncio
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query, status
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -8,8 +8,10 @@ from core.load_balancer import build_runtime_servers
 from core.simulation_engine import SimulationEngine
 from core.simulation_logger import get_simulation_log_content, delete_simulation_log
 from core.websocket_manager import WebSocketManager
+from core.security import decode_access_token
+
 from database.database import SessionLocal, get_db
-from models.db_model import Server, Simulation, SimulationStatus
+from models.db_model import Server, Simulation, SimulationStatus, User
 from models.schema import SimulationCreate, SimulationOut
 
 router = APIRouter(prefix="/simulations", tags=["simulations"])
@@ -187,7 +189,21 @@ def delete_simulation(sim_id: int, db: Session = Depends(get_db)):
     }
 
 @router.websocket("/ws/{sim_id}")
-async def simulation_ws(websocket: WebSocket, sim_id: int):
+async def simulation_ws(websocket: WebSocket, sim_id: int, token: str = Query(...)):
+    payload = decode_access_token(token)
+    if payload is None:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == int(payload.get("sub", -1))).first()
+        if user is None or not user.is_active:
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return
+    finally:
+        db.close()
+
     await ws_manager.connect(sim_id, websocket)
     try:
         while True:

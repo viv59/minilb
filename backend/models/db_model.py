@@ -55,10 +55,19 @@ class ServerHealth(Base):
     last_health_check = Column(DateTime, nullable=True)
 
     server = relationship("Server", back_populates="health")
+
+class UserRole(str, enum.Enum):
+    ADMIN = "admin"
+    USER = "user"
 class User(Base):
     __tablename__ = "user"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
+    email = Column(String, unique=True, nullable=False, index=True)
+    hashed_password = Column(String, nullable=False)
+    role = Column(Enum(UserRole), default=UserRole.USER, nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())
 
 class SimulationStatus(str, enum.Enum):
     CREATED = "CREATED"

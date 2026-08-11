@@ -1,3 +1,4 @@
+// src/routes.jsx
 import { createBrowserRouter } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
@@ -8,22 +9,44 @@ import Settings from "./pages/Settings.jsx";
 import Simulations from "./pages/Simulations.jsx";
 import RunningSimulation from "./pages/RunningSimulation.jsx";
 import SimulationLogsPage from "./pages/SimulationLogsPage.jsx";
-import SimulationLog from "./pages/SimulationLog.jsx"
+import SimulationLog from "./pages/SimulationLog.jsx";
+import Login from "./pages/Login.jsx";
+import Register from "./pages/Register.jsx";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute.jsx";
 
 export const router = createBrowserRouter([
     {
+        path: "/login",
+        element: <Login />,
+    },
+    {
+        path: "/register",
+        element: <Register />,
+    },
+    {
         path: "/",
-        element: <MainLayout />,
+        element: (
+            <ProtectedRoute>
+                <MainLayout />
+            </ProtectedRoute>
+        ),
         children: [
             { index: true, element: <Dashboard /> },
             { path: "servers", element: <Servers /> },
             { path: "algorithms", element: <Algorithms /> },
             { path: "analytics", element: <Analytics /> },
-            { path: "settings", element: <Settings /> },
+            {
+                path: "settings",
+                element: (
+                    <ProtectedRoute adminOnly>
+                        <Settings />
+                    </ProtectedRoute>
+                ),
+            },
             { path: "simulations", element: <Simulations /> },
             { path: "simulation/:simId", element: <RunningSimulation /> },
             { path: "simulation-logs", element: <SimulationLogsPage /> },
-            { path: "simulation-log/:simId", element: <SimulationLog />  }
+            { path: "simulation-log/:simId", element: <SimulationLog /> },
         ],
     },
 ]);

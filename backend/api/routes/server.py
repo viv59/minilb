@@ -2,13 +2,15 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session, joinedload
 
 from services.filter_engine import FilterError, FilterInput, _allowed_ops_for_column, build_filter, describe_model_fields
-from database.database import get_db
-from models.db_model import Server, ServerHealth
+from database.database import SessionLocal, get_db
+from models.db_model import Server, ServerHealth, User, UserRole
 from models.schema import ServerCreate, ServerUpdate
 
 from core.logger import logger
 from core.load_balancer import LoadBalancer, build_runtime_servers
 from typing import Dict, List
+
+from core.auth import get_current_user, require_admin
 
 import httpx
 
@@ -17,7 +19,7 @@ router = APIRouter(prefix="/servers", tags=["Servers"])
 load_balancer = LoadBalancer()
 
 @router.post("/")
-def create_server(server: ServerCreate, db: Session = Depends(get_db)):
+def create_server(server: ServerCreate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     new_server = Server(**server.dict(), status=True)
 
     db.add(new_server)
@@ -35,9 +37,12 @@ def create_server(server: ServerCreate, db: Session = Depends(get_db)):
     }
 
 @router.get("/")
-def get_servers(db: Session = Depends(get_db)):
+def get_servers(db: Session = Depends(get_db), _: User = Depends(get_current_user)):
 
     logger.info("Get all servers")
+
+    # drop_table(User)
+    # User.__table__.drop(bind=db.bind)
 
     servers = (
         db.query(Server)
@@ -185,3 +190,13 @@ def list_filterable_fields():
     dynamically instead of hardcoding it.
     """
     return describe_model_fields(Server)
+
+# db = SessionLocal()
+# user = db.query(User).filter(User.email == "admin@example.com").first()
+# if user:
+#     user.role = UserRole.ADMIN
+#     db.commit()
+#     print(f"{user.email} is now admin")
+# else:
+#     print("No user found with that email")
+# db.close()
