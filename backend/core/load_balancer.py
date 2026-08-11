@@ -6,6 +6,9 @@ from core.algorithms.weighted_round_robin import WeightedRoundRobin
 from core.algorithms.least_connections import LeastConnections
 from core.algorithms.weighted_least_connections import WeightedLeastConnections
 from core.algorithms.sticky_session import StickySessions
+from core.algorithms.least_cpu_usage import LeastCPUUsage
+from core.algorithms.least_memory_usage import LeastMemoryUsage
+
 import inspect
 
 class RuntimeServer:
@@ -75,6 +78,8 @@ class LoadBalancer:
         "consistent_hash": ConsistentHash,
         "sticky_session": lambda: StickySessions(fallback=LeastConnections()),
         "least_response_time": LeastResponseTime,
+        "least_cpu_usage": LeastCPUUsage,
+        "least_memory_usage": LeastMemoryUsage,
     }
 
     def __init__(self, algorithm: str = "round_robin"):

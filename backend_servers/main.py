@@ -25,6 +25,8 @@ ERROR_RATE = float(os.getenv("ERROR_RATE", "0.0"))
 # simulating contention for CPU/DB connections/etc.
 LOAD_SENSITIVITY_MS = float(os.getenv("LOAD_SENSITIVITY_MS", "20"))
 
+CPU_BASELINE_OFFSET = float(os.getenv("CPU_BASELINE_OFFSET", "0"))
+
 _state = {"active": 0, "total_served": 0, "total_errors": 0}
 
 
@@ -38,7 +40,8 @@ def health():
         # faked resource metrics - real implementation would read actual
         # process/host stats (psutil, cgroup limits, etc). Nudges upward
         # with current load, so it's not just static noise.
-        "cpu_usage": round(min(95, 15 + _state["active"] * 4 + random.uniform(-5, 5)), 1),
+        # "cpu_usage": round(min(95, 15 + _state["active"] * 4 + random.uniform(-5, 5)), 1),
+        "cpu_usage": round(min(95, 15 + CPU_BASELINE_OFFSET + _state["active"] * 4 + random.uniform(-5, 5)), 1),
         "memory_usage": round(min(95, 25 + _state["active"] * 2 + random.uniform(-3, 3)), 1),
         "network_usage": round(_state["active"] * random.uniform(0.8, 1.5), 2),  # Mbps, made up
     }

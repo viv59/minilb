@@ -8,6 +8,7 @@ import SimulationLogs from "../components/simulation/SimulationLogs.jsx";
 import NetworkDiagram from "../components/network/NetworkDiagram.jsx";
 import Loader from "../components/common/Loader.jsx";
 import { useSimulation } from "../hooks/useSimulation.js";
+import { ALGORITHM_OPTIONS } from "../utils/algorithms.js";
 
 export default function RunningSimulation() {
     const { simId } = useParams();
@@ -157,7 +158,7 @@ export default function RunningSimulation() {
                     <div>
                         <p className="text-text-dim text-sm mb-1">Algorithm</p>
                         <p className="text-base font-semibold text-text-primary">
-                            {activeSimulation?.algorithm || "N/A"}
+                            { ALGORITHM_OPTIONS.find(a => a.value === activeSimulation.algorithm)?.label ?? "Unknown Algorithm" }
                         </p>
                     </div>
                     <div>

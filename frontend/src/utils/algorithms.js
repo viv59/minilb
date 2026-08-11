@@ -6,14 +6,66 @@ export const ALGORITHMS = [
 ]
 
 export const ALGORITHM_OPTIONS = [
-    { value: "round_robin", label: "Round Robin", short_form: "RR" },
-    { value: "least_connections", label: "Least Connections", short_form: "LC" },
-    { value: "weighted_least_connections", label: "Weighted Least Connections", short_form: "WLC" },
-    { value: "weighted_round_robin", label: "Weighted Round Robin", short_form: "WRR" },
-    { value: "ip_hash", label: "IP Hash", short_form: "IH"},
-    { value: "consistent_hash", label: "Consistent Hash", short_form: "CH" },
-    { value: "sticky_session", label: "Sticky Session", short_form: "SS" },
-    { value: "least_response_time", label: "Least Response Time", short_form: "LRT" },
+    {
+        value: "round_robin",
+        label: "Round Robin",
+        short_form: "RR",
+        description: "Distributes requests sequentially across servers in a rotating order."
+    },
+    {
+        value: "least_connections",
+        label: "Least Connections",
+        short_form: "LC",
+        description: "Routes each request to the server with the fewest active connections."
+    },
+    {
+        value: "weighted_least_connections",
+        label: "Weighted Least Connections",
+        short_form: "WLC",
+        description: "Routes requests based on active connections relative to each server's assigned capacity weight."
+    },
+    {
+        value: "weighted_round_robin",
+        label: "Weighted Round Robin",
+        short_form: "WRR",
+        description: "Distributes requests proportionally according to each server's assigned weight."
+    },
+    {
+        value: "ip_hash",
+        label: "IP Hash",
+        short_form: "IH",
+        description: "Uses the client's IP address to consistently route requests to the same server."
+    },
+    {
+        value: "consistent_hash",
+        label: "Consistent Hash",
+        short_form: "CH",
+        description: "Uses consistent hashing to maintain stable server mapping while minimizing reassignment when servers change."
+    },
+    {
+        value: "sticky_session",
+        label: "Sticky Session",
+        short_form: "SS",
+        description: "Keeps a client connected to the same server throughout its session."
+    },
+    {
+        value: "least_response_time",
+        label: "Least Response Time",
+        short_form: "LRT",
+        description: "Routes requests to the server currently providing the fastest response time."
+    },
+    {
+        value: "least_cpu_usage",
+        label: "Least CPU Usage",
+        short_form: "LCU",
+        description: "Routes requests to the server with the lowest current CPU utilization."
+    },
+    {
+        value: "least_memory_usage",
+        label: "Least Memory Usage",
+        short_form: "LMU",
+        description: "Routes requests to the server with the lowest current memory utilization."
+    },
 ];
 
 // Small demo implementation, useful for visualizing routing on the Algorithms page.
