@@ -24,11 +24,17 @@ export default function RunningSimulation() {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        // Only show error if no active simulation at all
+        if (loading) {
+            setError(null);
+            return;
+        }
+
         if (!activeSimulation) {
             setError("No active simulation found");
+        } else {
+            setError(null);
         }
-    }, [activeSimulation]);
+    }, [activeSimulation, loading]);
 
     const handleStop = async () => {
         try {
@@ -52,6 +58,14 @@ export default function RunningSimulation() {
         navigate("/simulations");
     };
 
+    if (loading && !activeSimulation) {
+        return (
+            <div className="flex min-h-[400px] items-center justify-center">
+                <Loader />
+            </div>
+        );
+    }
+
     if (error) {
         return (
             <div className="flex flex-col gap-6">
@@ -71,7 +85,7 @@ export default function RunningSimulation() {
                         <p className="text-status-red mb-4">{error}</p>
                         <Button
                             onClick={handleBackToSimulations}
-                            className="bg-gradient-to-r from-accent1 to-accent2 text-white font-medium py-2 px-4 rounded-lg"
+                            className="bg-gradient-to-r from-accent1 to-accent2 font-medium py-2 px-4 rounded-lg"
                         >
                             Go to Simulations
                         </Button>
@@ -115,7 +129,7 @@ export default function RunningSimulation() {
                             </Button>
                             <Button
                                 onClick={handleBackToSimulations}
-                                className="bg-gradient-to-r from-accent1 to-accent2 text-white font-medium py-2 px-4 rounded-lg flex items-center gap-2"
+                                className="bg-gradient-to-r from-accent1 to-accent2 font-medium py-2 px-4 rounded-lg flex items-center gap-2"
                             >
                                 <ArrowLeft size={16} />
                                 Back to Simulations
@@ -158,7 +172,12 @@ export default function RunningSimulation() {
                     <div>
                         <p className="text-text-dim text-sm mb-1">Algorithm</p>
                         <p className="text-base font-semibold text-text-primary">
-                            { ALGORITHM_OPTIONS.find(a => a.value === activeSimulation.algorithm)?.label ?? "Unknown Algorithm" }
+                            {/* { ALGORITHM_OPTIONS.find(a => a.value === activeSimulation.algorithm)?.label ?? "Unknown Algorithm" } */}
+                            {
+                                ALGORITHM_OPTIONS.find(
+                                    (a) => a.value === activeSimulation?.algorithm
+                                )?.label ?? "Unknown Algorithm"
+                            }
                         </p>
                     </div>
                     <div>

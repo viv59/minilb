@@ -1,14 +1,24 @@
-import { X } from "lucide-react";
+import { X, Check, AlertTriangle, Info } from "lucide-react";
 
+// Only "error" gets red. Success/warning/info are distinguished by icon +
+// weight, not by color — that's what keeps the theme minimal.
 const VARIANTS = {
-    success:
-        "border-green-500/30 bg-green-500/10 text-green-400",
-    error:
-        "border-red-500/30 bg-red-500/10 text-red-400",
-    warning:
-        "border-yellow-500/30 bg-yellow-500/10 text-yellow-400",
-    info:
-        "border-accent1/30 bg-accent1/10 text-accent1",
+    success: {
+        classes: "border-app-border bg-app-panel text-app-text",
+        icon: Check,
+    },
+    error: {
+        classes: "border-accent/30 bg-accent/10 text-accent",
+        icon: AlertTriangle,
+    },
+    warning: {
+        classes: "border-text-dim/30 bg-white/5 text-text-dim",
+        icon: AlertTriangle,
+    },
+    info: {
+        classes: "border-app-border bg-app-panel text-text-dim",
+        icon: Info,
+    },
 };
 
 export default function Toast({
@@ -17,13 +27,18 @@ export default function Toast({
     variant = "info",
     onClose,
 }) {
+    const { classes, icon: Icon } = VARIANTS[variant];
+
     return (
         <div
-            className={`toast-slide flex items-start justify-between gap-4 rounded-lg border px-4 py-3 shadow-xl backdrop-blur ${VARIANTS[variant]}`}
+            className={`toast-slide flex items-start justify-between gap-3 rounded-lg border px-4 py-3 shadow-xl backdrop-blur ${classes}`}
         >
-            <div>
-                <div className="font-semibold">{title}</div>
-                <div className="text-sm opacity-80">{message}</div>
+            <div className="flex items-start gap-3">
+                <Icon size={16} className="mt-0.5 shrink-0" />
+                <div>
+                    <div className="font-semibold text-app-text">{title}</div>
+                    <div className="text-sm text-text-dim">{message}</div>
+                </div>
             </div>
 
             <button

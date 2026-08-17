@@ -128,7 +128,7 @@ export default function SimulationLogsPage() {
                                             sim.status === "CREATED" && (
                                             <button
                                                 onClick={() => handleStart(sim.id)}
-                                                className="hover:text-accent1"
+                                                className="hover:text-text-primary hover:text-blue-500"
                                                 title="Start Simulation"
                                             >
                                                 <Play size={15} />
@@ -147,7 +147,7 @@ export default function SimulationLogsPage() {
                                             onClick={() =>
                                                 removeSimulation(sim.id)
                                             }
-                                            className="hover:text-status-red"
+                                            className="hover:text-text-primary hover:text-red-500"
                                             title="Delete"
                                         >
                                             <Trash2 size={15} />

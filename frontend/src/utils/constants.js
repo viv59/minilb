@@ -60,7 +60,7 @@ export const DONUT_COLORS = [
 
 // Icon name must match a key exported from lucide-react - see Sidebar.jsx's ICONS map.
 export const NAV_ITEMS = [
-    { label: "Overview", path: "/", icon: "LayoutDashboard" },
+    // { label: "Overview", path: "/", icon: "LayoutDashboard" },
     { label: "Servers", path: "/servers", icon: "Server" },
     { label: "Simulations", path: "/simulations", icon: "Play" },
     { label: "Logs", path: "/simulation-logs", icon: "FileText" },

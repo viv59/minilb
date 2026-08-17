@@ -261,7 +261,7 @@ export default function Simulations() {
                     <Button
                         type="submit"
                         disabled={submitting}
-                        className="w-full bg-gradient-to-r from-accent1 to-accent2 text-white font-medium py-2 rounded-lg hover:opacity-90 disabled:opacity-50"
+                        className="w-full bg-gradient-to-r from-accent1 to-accent2 font-medium py-2 rounded-lg hover:opacity-90 disabled:opacity-50"
                     >
                         {submitting ? "Creating..." : "Create Simulation"}
                     </Button>

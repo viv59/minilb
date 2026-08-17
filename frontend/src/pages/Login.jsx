@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Server as ServerIcon } from 'lucide-react'
 import { useAuthStore } from '../store/authStore.js'
+import Button from '../components/common/Button.jsx'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -73,13 +74,20 @@ export default function Login() {
             </div>
           )}
 
-          <button
+          {/* <button
             type="submit"
             disabled={loading}
             className="mt-2 rounded-lg border border-accent1/70 bg-accent1/10 py-2 text-sm font-semibold text-accent1 transition hover:bg-accent1/20 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? 'Signing in...' : 'Sign in'}
-          </button>
+          </button> */}
+          <Button
+            type="submit"
+            disabled={loading}
+          >
+            { loading ? 'Signing in...' : 'Sign in' }
+          </Button>
+
         </form>
 
         <p className="mt-6 text-center text-xs text-text-faint">

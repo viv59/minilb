@@ -5,7 +5,7 @@ import { useToastStore } from "../store/ToastStore.js";
 
 let socketInstance = null;
 
-const { showToast } = useToastStore.getState();
+// const { showToast } = useToastStore.getState();
 
 function sumRequests(traffic_waves = []) {
     return traffic_waves.reduce((sum, w) => sum + (w.requests ?? 0), 0);
@@ -50,7 +50,7 @@ export const useSimulationStore = create((set, get) => ({
             summary: null,
             lastRoutedEvent: null,
         }));
-        showToast({
+        useToastStore.getState().showToast({
             variant: "success",
             // title: "Simulation Created",
             message: `${sim.name} was created successfully.`,
@@ -77,7 +77,7 @@ export const useSimulationStore = create((set, get) => ({
         });
 
         get().connectSocket(id);
-        showToast({
+        useToastStore.getState().showToast({
             variant: "info",
             // title: "Simulation Created",
             message: `Simulation started successfully.`,
@@ -90,7 +90,7 @@ export const useSimulationStore = create((set, get) => ({
             status: "STOPPED",
         });
         get().disconnectSocket();
-        showToast({
+        useToastStore.getState().showToast({
             variant: "info",
             // title: "Simulation Created",
             message: `Simulation stopped successfully.`,
@@ -99,7 +99,14 @@ export const useSimulationStore = create((set, get) => ({
 
     connectSocket: (id) => {
         get().disconnectSocket();
-        const socket = new SimulationSocket(id);
+        const socket = new SimulationSocket(id, {
+            onAuthError: () => {
+                useToastStore.getState().showToast({
+                    variant: "error",
+                    message: "Session expired. Please sign in again.",
+                })
+            }
+        });
         socketInstance = socket;
 
         socket.subscribe((event) => {
@@ -156,7 +163,7 @@ export const useSimulationStore = create((set, get) => ({
             set((state) => ({
                 simulations: state.simulations.filter((s) => s.id !== id),
             }));
-            showToast({
+            useToastStore.getState().showToast({
                 variant: "warning",
                 // title: "Simulation Removed",
                 message: `Simulation removed successfully.`,
@@ -173,7 +180,7 @@ export const useSimulationStore = create((set, get) => ({
             set((state) => ({
                 simulations: [...state.simulations, sim],
             }));
-            showToast({
+            useToastStore.getState().showToast({
                 variant: "success",
                 // title: "Simulation Removed",
                 message: `Duplicate simulation created successfully.`,

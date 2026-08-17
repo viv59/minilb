@@ -1,13 +1,27 @@
 :root {
-  --color-bg: #0a0c17;
-  --color-panel: #12152a;
-  --color-border: #242848;
-  --color-border-soft: #1b1e38;
-  --color-text: #e7e9f7;
-  --color-text-dim: #8a8fb3;
-  --color-text-faint: #5b5f82;
-  --color-accent-1: #7c5cff;
-  --color-accent-2: #4fd1ff;
-  --color-green: #34d399;
-  --color-red: #f87171;
+  /* Surfaces */
+  --color-bg: #000000;          /* app background — true black */
+  --color-panel: #101010;       /* card / panel surface */
+  --color-panel-soft: #161616;  /* hover / elevated surface */
+
+  /* Borders */
+  --color-border: #2a2a2a;      /* default border */
+  --color-border-soft: #1a1a1a; /* subtle border, panel edges */
+
+  /* Text */
+  --color-text: #f5f5f5;        /* primary text — off-white, never pure #fff on body copy */
+  --color-text-dim: #a3a3a3;    /* secondary text */
+  --color-text-faint: #6b6b6b;  /* disabled / tertiary text */
+
+  /* Accent — reserved for destructive/critical UI (buttons, toasts, errors) */
+  --color-accent: #ef4444;
+  --color-accent-hover: #dc2626;
+
+  /* Status colors — exception for server/health indicators only, not general UI */
+  --color-status-green: #34d399;
+  --color-status-yellow: #fbbf24;
+  --color-status-red: #ef4444;
+
+  /* Pure white, used sparingly for inverted (primary) surfaces */
+  --color-white: #ffffff;
 }

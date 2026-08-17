@@ -1,65 +1,143 @@
-import { useEffect } from 'react'
-import { Plus } from 'lucide-react'
-import { useServerStore } from '../../store/serverStore.js'
-import FilterConditionRow from './FilterConditionRow.jsx'
-import Button from '../common/Button.jsx'
+import { useEffect } from "react";
+import {
+    Plus,
+    SlidersHorizontal,
+    RotateCcw,
+} from "lucide-react";
+
+import { useServerStore } from "../../store/serverStore.js";
+import FilterConditionRow from "./FilterConditionRow.jsx";
+import Button from "../common/Button.jsx";
 
 export default function FilterBar() {
-  const filterFields = useServerStore((s) => s.filterFields)
-  const filterFieldsLoading = useServerStore((s) => s.filterFieldsLoading)
-  const conditions = useServerStore((s) => s.conditions)
-  const filterActive = useServerStore((s) => s.filterActive)
-  const fetchFilterFields = useServerStore((s) => s.fetchFilterFields)
-  const addCondition = useServerStore((s) => s.addCondition)
-  const updateCondition = useServerStore((s) => s.updateCondition)
-  const removeCondition = useServerStore((s) => s.removeCondition)
-  const applyFilters = useServerStore((s) => s.applyFilters)
-  const clearFilters = useServerStore((s) => s.clearFilters)
+    const filterFields = useServerStore((s) => s.filterFields);
+    const filterFieldsLoading = useServerStore(
+        (s) => s.filterFieldsLoading
+    );
+    const conditions = useServerStore((s) => s.conditions);
+    const filterActive = useServerStore((s) => s.filterActive);
 
-  useEffect(() => {
-    fetchFilterFields()
-  }, [fetchFilterFields])
+    const fetchFilterFields = useServerStore(
+        (s) => s.fetchFilterFields
+    );
+    const addCondition = useServerStore((s) => s.addCondition);
+    const updateCondition = useServerStore(
+        (s) => s.updateCondition
+    );
+    const removeCondition = useServerStore(
+        (s) => s.removeCondition
+    );
+    const applyFilters = useServerStore((s) => s.applyFilters);
+    const clearFilters = useServerStore((s) => s.clearFilters);
 
-  if (filterFieldsLoading) {
-    return <div className="text-sm text-gray-400 mb-4">Loading filters…</div>
-  }
+    useEffect(() => {
+        fetchFilterFields();
+    }, [fetchFilterFields]);
 
-  return (
-    <div className="mb-5 rounded-lg border border-app-panel bg-app-panel p-4">
-      <div className="flex flex-col gap-2">
-        {conditions.map((condition, i) => (
-          <FilterConditionRow
-            key={i}
-            condition={condition}
-            fieldOptions={filterFields}
-            canRemove={conditions.length > 1}
-            onChange={(patch) => updateCondition(i, patch)}
-            onRemove={() => removeCondition(i)}
-          />
-        ))}
-      </div>
+    if (filterFieldsLoading) {
+        return (
+            <div className="mb-5 rounded-lg border border-app-border bg-app-panel p-5">
+                <div className="flex items-center gap-3">
+                    <div className="h-4 w-4 animate-pulse rounded bg-gray-600/30" />
 
-      <div className="mt-3 flex items-center gap-2">
-        {/* <button
-          type="button"
-          onClick={addCondition}
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
-        >
-          <Plus size={14} /> Add condition
-        </button> */}
-        <Button onClick={addCondition} variant="outline">
-                <Plus size={14}/>
-        </Button>
+                    <div className="space-y-2">
+                        <div className="h-3 w-28 animate-pulse rounded bg-gray-600/30" />
+                        <div className="h-2 w-40 animate-pulse rounded bg-gray-600/20" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
-        <div className="ml-auto flex items-center gap-2">
-          {filterActive && (
-            <Button onClick={clearFilters} variant='ghost'>
-                Clear
-            </Button>
-          )}
-          <Button onClick={applyFilters}>Apply filters</Button>
+    return (
+        <div className="mb-5 overflow-hidden rounded-xl border border-app-border bg-app-panel shadow-sm">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-app-border px-4 py-3">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-500/10 text-gray-400">
+                        <SlidersHorizontal size={16} />
+                    </div>
+
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-sm font-medium text-gray-200">
+                                Filters
+                            </h3>
+
+                            {filterActive && (
+                                <span className="rounded-full bg-gray-500/10 px-2 py-0.5 text-[10px] font-medium text-gray-400">
+                                    Active
+                                </span>
+                            )}
+                        </div>
+
+                        <p className="mt-0.5 text-xs text-gray-500">
+                            Narrow down servers using one or more conditions
+                        </p>
+                    </div>
+                </div>
+
+                {filterActive && (
+                    <button
+                        type="button"
+                        onClick={clearFilters}
+                        className="
+                            flex items-center gap-1.5 rounded-md
+                            px-2.5 py-1.5 text-xs text-gray-500
+                            transition-colors
+                            hover:bg-gray-500/10 hover:text-gray-300
+                        "
+                    >
+                        <RotateCcw size={13} />
+                        Reset
+                    </button>
+                )}
+            </div>
+
+            {/* Conditions */}
+            <div className="p-4">
+                <div className="space-y-2">
+                    {conditions.map((condition, i) => (
+                        <FilterConditionRow
+                            key={i}
+                            condition={condition}
+                            fieldOptions={filterFields}
+                            canRemove={conditions.length > 1}
+                            isFirst={i === 0}
+                            onChange={(patch) =>
+                                updateCondition(i, patch)
+                            }
+                            onRemove={() => removeCondition(i)}
+                        />
+                    ))}
+                </div>
+
+                {/* Footer */}
+                <div className="mt-4 flex flex-col gap-3 border-t border-app-border pt-4 sm:flex-row sm:items-center">
+                    <Button
+                        onClick={addCondition}
+                        variant="outline"
+                    >
+                        <Plus size={14} />
+                        {/* <span>Add condition</span> */}
+                    </Button>
+
+                    <div className="flex items-center gap-2 sm:ml-auto">
+                        {filterActive && (
+                            <Button
+                                onClick={clearFilters}
+                                variant="ghost"
+                            >
+                                Clear
+                            </Button>
+                        )}
+
+                        <Button onClick={applyFilters}>
+                            Apply filters
+                        </Button>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  )
+    );
 }

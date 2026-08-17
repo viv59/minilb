@@ -20,7 +20,7 @@ export default function WaveProgress() {
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
                 <div
-                    className="h-full bg-gradient-to-r from-accent1 to-accent2 transition-all"
+                    className="h-full bg-app-text transition-all"
                     style={{ width: `${pct}%` }}
                 />
             </div>
