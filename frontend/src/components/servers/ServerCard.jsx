@@ -1,8 +1,12 @@
 import Card from "../common/Card.jsx";
 import Button from "../common/Button.jsx";
+import { useAuthStore } from "../../store/authStore.js";
 
 export default function ServerCard({ server, onEdit, onDelete }) {
-    console.log(server);
+    // console.log(server);
+
+    const isAdmin = useAuthStore((s) => s.isAdmin());
+    const user = useAuthStore((s) => s.user);
 
     const formatIST = (date) =>
         new Date(date + "Z")
@@ -132,7 +136,8 @@ export default function ServerCard({ server, onEdit, onDelete }) {
                 </div> */}
 
             </div>
-            <div className="mt-4 flex gap-2">
+
+            {isAdmin && <div className="mt-4 flex gap-2">
                 <Button
                     variant="outline"
                     className="flex-1"
@@ -147,7 +152,8 @@ export default function ServerCard({ server, onEdit, onDelete }) {
                 >
                     Delete
                 </Button>
-            </div>
+            </div>}
+            
         </Card>
     );
 }

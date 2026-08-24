@@ -18,6 +18,6 @@ SERVER_NAME=server-c BASE_LATENCY_MS=350 JITTER_MS=60 TAIL_CHANCE=0.05 LOAD_SENS
 $env:SERVER_NAME="server-c"; $env:BASE_LATENCY_MS="350"; $env:JITTER_MS="60"; $env:TAIL_CHANCE="0.05"; $env:LOAD_SENSITIVITY_MS="60"; uvicorn main:app --port 9003
 
 
-python run_server.py server-a 400 80 0.05 10 9001
-python run_server.py server-b 900 200 0.15 15 9002
-python run_server.py server-c 350 60 0.05 60 9003
+python run_server.py server-a 400 80 0.05 10 50 9001
+python run_server.py server-b 900 200 0.15 15 50 9002
+python run_server.py server-c 350 60 0.05 60 50 9003

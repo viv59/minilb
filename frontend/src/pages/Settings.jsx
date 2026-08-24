@@ -12,15 +12,11 @@ export default function Settings() {
           <span className="text-sm text-text-dim">Theme</span>
           <button
             onClick={toggleTheme}
-            className="rounded-lg border border-app-border px-3.5 py-1.5 text-xs text-text-dim hover:text-white"
+            className="rounded-lg border border-app-border px-3.5 py-1.5 text-xs text-text-dim hover:text-app-text"
           >
             {theme === 'dark' ? 'Switch to Light' : 'Switch to Dark'}
           </button>
         </div>
-        <p className="mt-2.5 text-xs text-text-faint">
-          Note: this starter is styled dark-first with fixed colors, not Tailwind's <code>dark:</code> variant, so
-          toggling here won't change the look yet — see the note in the summary below for how to wire it up.
-        </p>
       </Card>
     </div>
   )

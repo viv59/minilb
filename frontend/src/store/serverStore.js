@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { serverApi } from '../api/serverApi.js'
 import { ALGORITHMS } from '../utils/algorithms.js'
+import { useToastStore } from './ToastStore.js'
 
 // One empty condition row, used as the default/starting state of the
 // filter builder and whenever a new row is added.
@@ -31,6 +32,11 @@ export const useServerStore = create((set, get) => ({
   addServer: async (payload) => {
     const server = await serverApi.create(payload)
     set((state) => ({ servers: [...state.servers, server] }))
+    useToastStore.getState().showToast({
+            variant: "success",
+            // title: "Simulation Created",
+            message: `${server.name} created successfully.`,
+        });
     return server
   },
 
@@ -40,6 +46,11 @@ export const useServerStore = create((set, get) => ({
     set((state) => ({
       servers: state.servers.map((s) => (s.id === id ? server : s)),
     }))
+    useToastStore.getState().showToast({
+            variant: "success",
+            // title: "Simulation Created",
+            message: `${server.name} updated successfully.`,
+        });
     return server
   },
 
@@ -47,6 +58,11 @@ export const useServerStore = create((set, get) => ({
     if (get().servers.length <= 1) return
     await serverApi.remove(id)
     set((state) => ({ servers: state.servers.filter((s) => s.id !== id) }))
+    useToastStore.getState().showToast({
+            variant: "warning",
+            // title: "Simulation Created",
+            message: `${server.name} deleted successfully.`,
+        });
   },
 
   cycleAlgorithm: () =>

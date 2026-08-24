@@ -119,7 +119,7 @@ export default function FilterBar() {
                         variant="outline"
                     >
                         <Plus size={14} />
-                        {/* <span>Add condition</span> */}
+                        {/* <span>Add condition</span>> */}
                     </Button>
 
                     <div className="flex items-center gap-2 sm:ml-auto">

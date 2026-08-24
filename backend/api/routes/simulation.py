@@ -14,6 +14,8 @@ from database.database import SessionLocal, get_db
 from models.db_model import Server, Simulation, SimulationStatus, User
 from models.schema import SimulationCreate, SimulationOut
 
+from core.auth import get_current_user, require_admin
+
 router = APIRouter(prefix="/simulations", tags=["simulations"])
 
 # Single shared instances — module-level so state survives across requests.
@@ -22,7 +24,7 @@ running_engines: dict[int, SimulationEngine] = {}
 
 
 @router.post("/", response_model=SimulationOut)
-def create_simulation(payload: SimulationCreate, db: Session = Depends(get_db)):
+def create_simulation(payload: SimulationCreate, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
     sim = Simulation(
         name=payload.simulation_name,
         algorithm=payload.algorithm,
@@ -36,12 +38,12 @@ def create_simulation(payload: SimulationCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/", response_model=list[SimulationOut])
-def list_simulations(db: Session = Depends(get_db)):
+def list_simulations(db: Session = Depends(get_db), _: User = Depends(get_current_user)):
     return db.query(Simulation).all()
 
 
 @router.get("/{sim_id}", response_model=SimulationOut)
-def get_simulation(sim_id: int, db: Session = Depends(get_db)):
+def get_simulation(sim_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
     sim = db.query(Simulation).get(sim_id)
     if not sim:
         raise HTTPException(404, "Simulation not found")
@@ -49,7 +51,7 @@ def get_simulation(sim_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/{sim_id}/start")
-async def start_simulation(sim_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+async def start_simulation(sim_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db),_: User = Depends(get_current_user)):
     sim = db.query(Simulation).get(sim_id)
     if not sim:
         raise HTTPException(404, "Simulation not found")
@@ -101,7 +103,7 @@ async def _run_and_cleanup(sim_id: int, engine: SimulationEngine):
 
 
 @router.post("/{sim_id}/stop")
-def stop_simulation(sim_id: int):
+def stop_simulation(sim_id: int, _: User = Depends(get_current_user)):
     engine = running_engines.get(sim_id)
     if not engine:
         raise HTTPException(400, "Simulation is not currently running")
@@ -111,7 +113,7 @@ def stop_simulation(sim_id: int):
 
 
 @router.get("/{sim_id}/logs")
-def get_simulation_logs(sim_id: int, db: Session = Depends(get_db)):
+def get_simulation_logs(sim_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
     """Fetch logs for a specific simulation"""
     sim = db.query(Simulation).get(sim_id)
     if not sim:
@@ -122,7 +124,7 @@ def get_simulation_logs(sim_id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/{sim_id}/logs")
-def delete_logs(sim_id: int, db: Session = Depends(get_db)):
+def delete_logs(sim_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
     """Delete logs for a specific simulation"""
     sim = db.query(Simulation).get(sim_id)
     if not sim:
@@ -134,7 +136,7 @@ def delete_logs(sim_id: int, db: Session = Depends(get_db)):
         raise HTTPException(404, "No logs found for this simulation")
 
 @router.post("/{sim_id}/duplicate",response_model=SimulationOut)
-def duplicate_simulation(sim_id: int, db: Session = Depends(get_db)):
+def duplicate_simulation(sim_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
     original = (
         db.query(Simulation)
         .filter(Simulation.id == sim_id)
@@ -162,7 +164,7 @@ def duplicate_simulation(sim_id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/")
-def delete_all_simulations(db: Session = Depends(get_db)):
+def delete_all_simulations(db: Session = Depends(get_db), _: User = Depends(require_admin)):
     deleted_count = db.query(Simulation).count()
     db.query(Simulation).delete(synchronize_session=False)
     db.commit()
@@ -170,7 +172,7 @@ def delete_all_simulations(db: Session = Depends(get_db)):
     return {"message": "All simulations deleted", "deleted_count": deleted_count}
 
 @router.delete("/{sim_id}")
-def delete_simulation(sim_id: int, db: Session = Depends(get_db)):
+def delete_simulation(sim_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
     """Delete a specific simulation"""
 
     sim = db.query(Simulation).filter(Simulation.id == sim_id).first()

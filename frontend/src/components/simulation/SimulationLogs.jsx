@@ -80,7 +80,7 @@ export default function SimulationLogs({ simulationId }) {
                     <Button
                         onClick={fetchLogs}
                         disabled={loading}
-                        variant="secondary"
+                        variant="outline"
                         size="sm"
                         className="flex items-center gap-2"
                     >
@@ -90,7 +90,7 @@ export default function SimulationLogs({ simulationId }) {
                     <Button
                         onClick={downloadLogs}
                         disabled={loading || !logs}
-                        variant="secondary"
+                        variant="outline"
                         size="sm"
                         className="flex items-center gap-2"
                     >

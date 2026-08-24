@@ -13,6 +13,11 @@ export default function MainLayout() {
                 <main className="min-h-0 flex-1 overflow-y-auto p-6">
                     <Outlet />
                 </main>
+
+                {/* <footer className="border-t border-app-border-soft py-2.5 text-center text-[11px] text-text-faint">
+                    Made with 🧡 by Vivek Gaikwad
+                </footer> */}
+
             </div>
         </div>
     );

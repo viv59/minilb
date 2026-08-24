@@ -448,7 +448,7 @@ export default function Simulations() {
                                                     onClick={() =>
                                                         handleStart(sim.id)
                                                     }
-                                                    className="flex items-center gap-1.5 text-text-dim hover:text-accent1"
+                                                    className="flex items-center gap-1.5 text-text-dim hover:text-purple-500"
                                                     title="Start"
                                                 >
                                                     <Play size={15} />

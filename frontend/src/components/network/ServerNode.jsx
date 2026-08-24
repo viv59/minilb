@@ -70,7 +70,7 @@ const ServerNode = forwardRef(function ServerNode(
 
             <div className="pointer-events-none absolute right-full top-1/2 z-10 mr-3 w-48 -translate-y-1/2 rounded-xl border border-app-border-soft bg-app-panel p-3 text-left opacity-0 shadow-lg transition group-hover:opacity-100">
                 <div className="flex justify-between">
-                    <div className="truncate text-sm font-semibold">
+                    <div className="text-xs font-semibold">
                         {server.id} - {server.name}
                     </div>
                     <span className={`text-xs ${classes.text}`}>
@@ -79,6 +79,15 @@ const ServerNode = forwardRef(function ServerNode(
                                 ? "Maintenance"
                                 : "Healthy"
                             : "Unhealthy"}
+                    </span>
+                </div>
+                <div className="mt-2 flex items-center justify-between text-xs text-text-faint">
+                    <span>Weight</span>
+                    <span className="font-semibold text-app-text">
+                        {server.weight !== null &&
+                        server.weight !== undefined
+                            ? server.weight
+                            : 0}
                     </span>
                 </div>
                 <div className="mt-2 flex items-center justify-between text-xs text-text-faint">

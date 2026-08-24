@@ -108,7 +108,7 @@ export default function TrafficDonut() {
                     </div>
 
                     {/* Legend — 60% */}
-                    <div className="flex w-[60%] flex-col justify-center gap-2.5 text-xs">
+                    <div className="flex w-[60%] flex-col justify-center gap-2.5 text-xs mb-2">
                         {distribution.map((d) => (
                             <div
                                 key={d.id}
@@ -132,7 +132,7 @@ export default function TrafficDonut() {
                     </div>
                 </div>
 
-                <div className="mb-4 flex items-center justify-between border-t border-app-border-soft pt-3.5 text-sm">
+                {/* <div className="mb-6 flex items-center justify-between border-t border-app-border-soft pt-3.5 text-sm">
                     <span className="text-text-faint">
                         Total Requests Processed
                     </span>
@@ -140,7 +140,7 @@ export default function TrafficDonut() {
                     <span className="text-sm font-bold">
                         {totalRequests.toLocaleString()}
                     </span>
-                </div>
+                </div> */}
             </div>
 
             {hovered && (

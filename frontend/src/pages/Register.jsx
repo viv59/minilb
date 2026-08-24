@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Server as ServerIcon } from 'lucide-react'
 import { useAuthStore } from '../store/authStore.js'
+import Button from '../components/common/Button.jsx'
 
 export default function Register() {
   const [name, setName] = useState('')
@@ -27,15 +28,15 @@ export default function Register() {
       <div className="w-full max-w-sm rounded-2xl border border-app-border-soft bg-app-panel p-8 shadow-lg">
         <div className="mb-6 flex flex-col items-center gap-2 text-center">
           <div className="flex aspect-square w-12 items-center justify-center rounded-full border border-accent1/70 bg-accent1/10">
-            <ServerIcon className="h-5 w-5 text-accent1" />
+            <ServerIcon className="h-5 w-5 text-white" />
           </div>
-          <h1 className="text-lg font-semibold">Create an account</h1>
+          <h1 className="text-lg text-white">Create an account</h1>
           <p className="text-xs text-text-faint">New accounts start with standard access</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="name" className="text-xs font-medium text-text-faint">
+            <label htmlFor="name" className="text-xs font-medium text-white">
               Name
             </label>
             <input
@@ -45,13 +46,13 @@ export default function Register() {
               autoComplete="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="rounded-lg border border-app-border-soft bg-transparent px-3 py-2 text-sm outline-none transition focus:border-accent1"
+              className="rounded-lg border border-app-border-soft  px-3 py-2 text-sm outline-none transition focus:border-accent1"
               placeholder="Jane Doe"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="email" className="text-xs font-medium text-text-faint">
+            <label htmlFor="email" className="text-xs font-medium text-white">
               Email
             </label>
             <input
@@ -61,13 +62,13 @@ export default function Register() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="rounded-lg border border-app-border-soft bg-transparent px-3 py-2 text-sm outline-none transition focus:border-accent1"
+              className="rounded-lg border border-app-border-soft  px-3 py-2 text-sm outline-none transition focus:border-accent1"
               placeholder="you@example.com"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="password" className="text-xs font-medium text-text-faint">
+            <label htmlFor="password" className="text-xs font-medium text-white">
               Password
             </label>
             <input
@@ -78,7 +79,7 @@ export default function Register() {
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="rounded-lg border border-app-border-soft bg-transparent px-3 py-2 text-sm outline-none transition focus:border-accent1"
+              className="rounded-lg border border-app-border-soft  px-3 py-2 text-sm outline-none transition focus:border-accent1"
               placeholder="At least 8 characters"
             />
           </div>
@@ -89,13 +90,19 @@ export default function Register() {
             </div>
           )}
 
-          <button
+          {/* <button
             type="submit"
             disabled={loading}
             className="mt-2 rounded-lg border border-accent1/70 bg-accent1/10 py-2 text-sm font-semibold text-accent1 transition hover:bg-accent1/20 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? 'Creating account...' : 'Create account'}
-          </button>
+          </button> */}
+          <Button
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? 'Creating account...' : 'Create account'}
+          </Button>
         </form>
 
         <p className="mt-6 text-center text-xs text-text-faint">

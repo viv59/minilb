@@ -62,7 +62,7 @@ def get_servers(db: Session = Depends(get_db), _: User = Depends(get_current_use
     }
 
 @router.put("/{server_id}")
-def update_server(server_id: int, server: ServerUpdate, db: Session = Depends(get_db)):
+def update_server(server_id: int, server: ServerUpdate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
 
     db_server = db.query(Server).filter(Server.id == server_id).first()
 
@@ -86,7 +86,7 @@ def update_server(server_id: int, server: ServerUpdate, db: Session = Depends(ge
     }
 
 @router.delete("/{server_id}")
-def delete_server(server_id: int, db: Session = Depends(get_db)):
+def delete_server(server_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
 
     # Can use soft delete??
     server = db.query(Server).filter(Server.id == server_id).first()
@@ -121,41 +121,41 @@ def delete_server(server_id: int, db: Session = Depends(get_db)):
 #         "server_id": server.id
 #     }
 
-@router.post("/route-request")
-async def route_request( request: Request, db: Session = Depends(get_db)):
+# @router.post("/route-request")
+# async def route_request( request: Request, db: Session = Depends(get_db)):
 
-    client_ip = request.client.host
+#     client_ip = request.client.host
 
-    db_servers = (
-        db.query(Server)
-        .options(joinedload(Server.health))
-        .filter(Server.status == True, Server.maintenance_mode == False)  # noqa: E712
-        .all()
-    )
+#     db_servers = (
+#         db.query(Server)
+#         .options(joinedload(Server.health))
+#         .filter(Server.status == True, Server.maintenance_mode == False)  # noqa: E712
+#         .all()
+#     )
 
-    runtime_servers = build_runtime_servers(db_servers)
-    load_balancer.set_servers(runtime_servers)
-    server = load_balancer.get_next_server(client_ip=client_ip)
+#     runtime_servers = build_runtime_servers(db_servers)
+#     load_balancer.set_servers(runtime_servers)
+#     server = load_balancer.get_next_server(client_ip=client_ip)
 
-    if server is None:
-        raise HTTPException(status_code=404, detail="No healthy servers available")
+#     if server is None:
+#         raise HTTPException(status_code=404, detail="No healthy servers available")
 
-    try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            resp = await client.get(f"{server.url}/handle")
-            resp.raise_for_status()
-            backend_data = resp.json()
-    except httpx.HTTPError as e:
-        logger.error(f"Server {server.name} failed to handle request: {e}")
-        raise HTTPException(status_code=502, detail=f"Backend {server.name} error")
-    finally:
-        load_balancer.release_connection(server.id)
+#     try:
+#         async with httpx.AsyncClient(timeout=5.0) as client:
+#             resp = await client.get(f"{server.url}/handle")
+#             resp.raise_for_status()
+#             backend_data = resp.json()
+#     except httpx.HTTPError as e:
+#         logger.error(f"Server {server.name} failed to handle request: {e}")
+#         raise HTTPException(status_code=502, detail=f"Backend {server.name} error")
+#     finally:
+#         load_balancer.release_connection(server.id)
 
-    return {
-        "selected_server": server.name,
-        "server_id": server.id,
-        "backend_response": backend_data,
-    }
+#     return {
+#         "selected_server": server.name,
+#         "server_id": server.id,
+#         "backend_response": backend_data,
+#     }
 
 @router.post("/filter")
 def filter_servers(
@@ -163,6 +163,7 @@ def filter_servers(
     limit: int = Query(50, le=500),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
+    _: User = Depends(get_current_user)
 ):
     try:
         expr = build_filter(Server, payload)
@@ -182,7 +183,7 @@ def filter_servers(
  
  
 @router.get("/filter/fields")
-def list_filterable_fields():
+def list_filterable_fields(_: User = Depends(get_current_user)):
     """
     Tells your frontend which fields exist, each field's type (boolean /
     number / string / date), and which operators are valid for it, so it
