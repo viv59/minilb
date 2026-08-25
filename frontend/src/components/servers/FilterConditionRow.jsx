@@ -55,11 +55,11 @@ export default function FilterConditionRow({
             {/* AND indicator */}
             <div className="hidden sm:flex w-14 shrink-0 items-center justify-center">
                 {isFirst ? (
-                    <span className="text-xs font-medium text-gray-500">
+                    <span className="text-xs font-medium text-text-dim">
                         WHERE
                     </span>
                 ) : (
-                    <span className="rounded-full border border-app-border bg-app-panel px-2 py-0.5 text-[10px] font-semibold tracking-wide text-gray-500">
+                    <span className="rounded-full border border-app-border bg-app-panel px-2 py-0.5 text-[10px] font-semibold tracking-wide text-text-dim">
                         AND
                     </span>
                 )}
@@ -68,7 +68,7 @@ export default function FilterConditionRow({
             {/* Condition */}
             <div className="group flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-app-border bg-app-panel/60 p-2 transition-colors hover:border-gray-500/40">
                 {/* Drag / condition indicator */}
-                <div className="hidden sm:flex shrink-0 items-center text-gray-600">
+                <div className="hidden sm:flex shrink-0 items-center text-text-dim">
                     <GripVertical size={15} />
                 </div>
 
@@ -77,7 +77,7 @@ export default function FilterConditionRow({
                     <select
                         className="
                             w-full rounded-md border border-app-border
-                            bg-app-panel px-3 py-2 text-sm text-gray-200
+                            bg-app-panel px-3 py-2 text-sm text-text-dim
                             outline-none transition
                             hover:border-gray-500/60
                             focus:border-gray-400
@@ -101,7 +101,7 @@ export default function FilterConditionRow({
                     <select
                         className="
                             w-full rounded-md border border-app-border
-                            bg-app-panel px-3 py-2 text-sm text-gray-200
+                            bg-app-panel px-3 py-2 text-sm text-text-dim
                             outline-none transition
                             hover:border-gray-500/60
                             focus:border-gray-400
@@ -140,12 +140,12 @@ export default function FilterConditionRow({
                     disabled={!canRemove}
                     className="
                         shrink-0 rounded-md p-2
-                        text-gray-500 transition-colors
+                        text-text-dim transition-colors
                         hover:bg-red-500/10 hover:text-red-400
                         disabled:cursor-not-allowed
                         disabled:opacity-20
                         disabled:hover:bg-transparent
-                        disabled:hover:text-gray-500
+                        disabled:hover:text-text-dim
                     "
                     aria-label="Remove condition"
                     title="Remove condition"
@@ -160,9 +160,9 @@ export default function FilterConditionRow({
 function ValueInput({ fieldType, operator, value, onChange }) {
     const baseClass = `
         w-full rounded-md border border-app-border
-        bg-app-panel px-3 py-2 text-sm text-gray-200
+        bg-app-panel px-3 py-2 text-sm text-text-dim
         outline-none transition
-        placeholder:text-gray-600
+        placeholder:text-text-dim
         hover:border-gray-500/60
         focus:border-gray-400
         focus:ring-1 focus:ring-gray-500/30
@@ -174,7 +174,7 @@ function ValueInput({ fieldType, operator, value, onChange }) {
                 className="
                     flex h-[38px] w-full items-center
                     rounded-md border border-dashed border-app-border
-                    px-3 text-sm text-gray-600
+                    px-3 text-sm text-text-dim
                 "
             >
                 Select operator first
@@ -187,8 +187,8 @@ function ValueInput({ fieldType, operator, value, onChange }) {
             <div
                 className="
                     flex h-[38px] w-full items-center
-                    rounded-md bg-gray-500/5 px-3
-                    text-sm text-gray-500
+                    rounded-md bg-app-panel-soft/5 px-3
+                    text-sm text-text-dim
                 "
             >
                 No value required

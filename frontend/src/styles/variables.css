@@ -1,29 +1,48 @@
 :root {
-  /* Surfaces */
-  --color-bg: #000000;          /* app background — true black */
-  --color-panel: #101010;       /* card / panel surface */
-  --color-panel-soft: #161616;  /* hover / elevated surface */
+  /* Light theme (default) */
+  --color-bg: #ffffff;
+  --color-panel: #f7f7f7;
+  --color-panel-soft: #efefef;
 
-  /* Borders */
-  --color-border: #2a2a2a;      /* default border */
-  --color-border-soft: #1a1a1a; /* subtle border, panel edges */
+  --color-border: #e3e3e3;
+  --color-border-soft: #ececec;
 
-  /* Text */
-  --color-text: #f5f5f5;        /* primary text — off-white, never pure #fff on body copy */
-  --color-text-dim: #a3a3a3;    /* secondary text */
-  --color-text-faint: #6b6b6b;  /* disabled / tertiary text */
-  --color-text-white: var(--color-white)
+  --color-text: #171717;
+  --color-text-dim: #5c5c5c;
+  --color-text-faint: #9a9a9a;
 
-  /* Accent — reserved for destructive/critical UI (buttons, toasts, errors) */
   --color-accent: #ef4444;
   --color-accent-hover: #dc2626;
   --color-accent-purple: #a855f7;
 
-  /* Status colors — exception for server/health indicators only, not general UI */
+  --color-status-green: #10b981;
+  --color-status-yellow: #d97706;
+  --color-status-red: #dc2626;
+
+  --color-white: #ffffff;
+  --color-text-white: var(--color-white);
+}
+
+.dark {
+  --color-bg: #000000;
+  --color-panel: #101010;
+  --color-panel-soft: #161616;
+
+  --color-border: #2a2a2a;
+  --color-border-soft: #1a1a1a;
+
+  --color-text: #f5f5f5;
+  --color-text-dim: #a3a3a3;
+  --color-text-faint: #6b6b6b;
+
+  --color-accent: #ef4444;
+  --color-accent-hover: #dc2626;
+  --color-accent-purple: #a855f7;
+
   --color-status-green: #34d399;
   --color-status-yellow: #fbbf24;
   --color-status-red: #ef4444;
 
-  /* Pure white, used sparingly for inverted (primary) surfaces */
   --color-white: #ffffff;
+  --color-text-white: var(--color-white);
 }

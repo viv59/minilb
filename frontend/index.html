@@ -7,8 +7,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <title>miniLB</title>
   </head>
-  <body class="dark">
+  <body>
     <div id="root"></div>
+    <script>
+      (function () {
+        var theme = localStorage.getItem('lb-theme') || 'dark';
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

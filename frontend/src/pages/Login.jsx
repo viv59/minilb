@@ -29,15 +29,15 @@ export default function Login() {
       <div className="w-full max-w-sm rounded-2xl border border-app-border-soft bg-app-panel p-8 shadow-lg">
         <div className="mb-6 flex flex-col items-center gap-2 text-center">
           <div className="flex aspect-square w-12 items-center justify-center rounded-full border border-accent1/70 bg-accent1/10">
-            <ServerIcon className="h-5 w-5 text-accent1 text-white" />
+            <ServerIcon className="h-5 w-5 text-accent1 text-app-text" />
           </div>
-          <h1 className="text-lg font-semibold text-white">Sign in</h1>
+          <h1 className="text-lg font-semibold text-app-text">Sign in</h1>
           <p className="text-xs text-text-faint">Access your load balancer dashboard</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="email" className="text-xs font-medium text-white">
+            <label htmlFor="email" className="text-xs font-medium text-app-text">
               Email
             </label>
             <input
@@ -53,7 +53,7 @@ export default function Login() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="password" className="text-xs font-medium text-white">
+            <label htmlFor="password" className="text-xs font-medium text-app-text">
               Password
             </label>
             <input

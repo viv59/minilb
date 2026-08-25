@@ -95,7 +95,7 @@ export default function SimulationLogsPage() {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Search by name"
-                        className="w-56 rounded-lg border border-app-border bg-app-bg py-1.5 pl-8 pr-3 text-sm text-app-text placeholder:text-text-faint focus:outline-none focus:ring-1 focus:ring-white/30"
+                        className="w-56 rounded-lg border border-app-border bg-app-bg py-1.5 pl-8 pr-3 text-sm text-app-text placeholder:text-text-faint focus:outline-none focus:ring-1 focus:ring-app-text/30"
                     />
                 </div>
             </div>

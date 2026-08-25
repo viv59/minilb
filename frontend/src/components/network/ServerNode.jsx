@@ -53,7 +53,7 @@ const ServerNode = forwardRef(function ServerNode(
         >
             <div
                 className={`flex aspect-square items-center justify-center rounded-xl border p-3 transition shadow-lg ${classes.shadow} ${selectedClass} ${
-                    pulsing ? "ring-2 ring-white/40" : ""
+                    pulsing ? "ring-2 ring-app-text/40" : ""
                 }`}
             >
                 <ServerIcon className={`h-5 w-5 ${classes.text}`} />
@@ -62,7 +62,7 @@ const ServerNode = forwardRef(function ServerNode(
             {healthy && !maintenance && handledRequests !== null && handledRequests !== undefined && (
                 <div className="absolute top-0 right-0 z-20 flex -translate-y-1/3 translate-x-1/3">
                     <span className="absolute inset-0 rounded-full bg-status-green opacity-40"></span>
-                    <span className="relative flex min-w-5 min-h-5 items-center justify-center rounded-full border-2 border-app-panel bg-status-green px-1 text-[0.625rem] font-bold leading-none text-black shadow-lg">
+                    <span className="relative flex min-w-5 min-h-5 items-center justify-center rounded-full border-2 border-app-panel bg-status-green px-1 text-[0.625rem] font-bold leading-none text-app-bg shadow-lg">
                         {handledRequests > 999 ? "999+" : handledRequests}
                     </span>
                 </div>

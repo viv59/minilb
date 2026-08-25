@@ -18,7 +18,7 @@ export default function WaveProgress() {
                     {processed} / {totalPlanned} requests
                 </span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-app-text/10">
                 <div
                     className="h-full bg-app-text transition-all"
                     style={{ width: `${pct}%` }}

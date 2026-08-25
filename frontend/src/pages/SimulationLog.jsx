@@ -49,7 +49,7 @@ export default function SimulationLog() {
             <div className="flex items-center justify-between">
                 <Button
                     onClick={() => navigate("/simulation-logs")}
-                    variant="secondary"
+                    variant="primary"
                     size="sm"
                     className="flex items-center gap-2"
                 >
@@ -58,7 +58,7 @@ export default function SimulationLog() {
                 </Button>
                 <Button
                     onClick={() => fetchSimulationLogs(simId)}
-                    variant="secondary"
+                    variant="outline"
                     size="sm"
                     className="flex items-center gap-2"
                 >

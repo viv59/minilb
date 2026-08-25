@@ -6,7 +6,7 @@ export default function Modal({ open, title, onClose, children }) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-app-bg/60 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
       <div
@@ -15,7 +15,7 @@ export default function Modal({ open, title, onClose, children }) {
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold text-app-text">{title}</h2>
-          <button onClick={onClose} className="text-text-dim hover:text-white">
+          <button onClick={onClose} className="text-text-dim hover:text-app-text">
             <X size={18} />
           </button>
         </div>

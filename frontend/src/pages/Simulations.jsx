@@ -158,7 +158,7 @@ export default function Simulations() {
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="w-full rounded-lg border border-border-primary bg-bg-primary px-3 py-2 text-black placeholder-text-dim focus:border-accent1 focus:outline-none"
+                                className="w-full rounded-lg border border-border-primary bg-bg-primary bg-inherit px-3 py-2 placeholder-text-dim focus:border-accent1 focus:outline-none"
                                 placeholder="Enter simulation name"
                                 required
                             />
@@ -172,7 +172,7 @@ export default function Simulations() {
                             <select
                                 value={algorithm}
                                 onChange={(e) => setAlgorithm(e.target.value)}
-                                className="w-full rounded-lg border border-border-primary bg-bg-primary px-3 py-2 text-black focus:border-accent1 focus:outline-none"
+                                className="w-full rounded-lg border border-border-primary bg-bg-primary bg-inherit px-3 py-2 focus:border-accent1 focus:outline-none"
                             >
                                 {ALGORITHM_OPTIONS.map((opt) => (
                                     <option key={opt.value} value={opt.value}>
@@ -222,7 +222,7 @@ export default function Simulations() {
                                                     ),
                                                 })
                                             }
-                                            className="w-full rounded border border-border-primary bg-bg-secondary px-2 py-1 text-sm text-black focus:border-accent1 focus:outline-none"
+                                            className="w-full rounded border border-border-primary bg-bg-secondary bg-inherit px-2 py-1 text-sm focus:border-accent1 focus:outline-none"
                                         />
                                     </div>
                                     <div className="flex-1">
@@ -240,7 +240,7 @@ export default function Simulations() {
                                                     ),
                                                 })
                                             }
-                                            className="w-full rounded border border-border-primary bg-bg-secondary px-2 py-1 text-sm text-black focus:border-accent1 focus:outline-none"
+                                            className="w-full rounded border border-border-primary bg-bg-secondary bg-inherit px-2 py-1 text-sm focus:border-accent1 focus:outline-none"
                                         />
                                     </div>
                                     {waves.length > 1 && (

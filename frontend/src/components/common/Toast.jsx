@@ -12,7 +12,7 @@ const VARIANTS = {
         icon: AlertTriangle,
     },
     warning: {
-        classes: "border-text-dim/30 bg-white/5 text-text-dim",
+        classes: "border-text-dim/30 bg-app-text/5 text-text-dim",
         icon: AlertTriangle,
     },
     info: {

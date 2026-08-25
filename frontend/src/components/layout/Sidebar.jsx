@@ -47,7 +47,7 @@ export default function Sidebar() {
             {/* Logo */}
             <div className="flex flex-shrink-0 items-center gap-2.5 px-2 pb-5 pt-1.5">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-app-text">
-                    <Hexagon size={16} className="text-black" />
+                    <Hexagon size={16} className="text-app-bg" />
                 </div>
 
                 <span className="text-sm font-semibold font-mono tracking-tight">
@@ -68,8 +68,8 @@ export default function Sidebar() {
                             className={({ isActive }) =>
                                 `flex flex-shrink-0 items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13.5px] transition ${
                                     isActive
-                                        ? "border border-app-border bg-white/5 text-app-text"
-                                        : "text-text-dim hover:bg-white/5 hover:text-white"
+                                        ? "border border-app-border bg-app-text/5 text-app-text"
+                                        : "text-text-dim hover:bg-app-text/5 hover:text-app-text"
                                 }`
                             }
                         >

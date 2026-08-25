@@ -118,7 +118,7 @@ export default function NetworkDiagram() {
                         key={p.id}
                         d={p.d}
                         fill="none"
-                        stroke="#ffffff30"
+                        stroke="var(--color-border)"
                         strokeWidth="1.6"
                         strokeDasharray="2 6"
                         strokeLinecap="round"
@@ -128,7 +128,7 @@ export default function NetworkDiagram() {
             </svg>
 
             <div className="relative grid grid-cols-1 items-center justify-items-center gap-6 md:grid-cols-[auto_1fr_auto_1fr_auto] md:justify-items-stretch">
-                <div className="flex aspect-square flex-shrink-0 flex-col items-center justify-center gap-1 rounded-full border border-accent1/70 bg-accent1/10 p-6 text-center text-xs font-semibold shadow-lg shadow-accent1/30">
+                <div className="flex aspect-square flex-shrink-0 flex-col items-center justify-center gap-1 rounded-full border border-accent/70 bg-accent/10 p-6 text-center text-xs font-semibold shadow-lg shadow-accent/30">
                     <Globe className="h-5 w-5" />
                     Incoming
                     <br />

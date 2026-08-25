@@ -13,6 +13,7 @@ import SimulationLog from "./pages/SimulationLog.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute.jsx";
+import LandingPage from "./pages/LandingPage.jsx";
 
 export const router = createBrowserRouter([
     {
@@ -22,6 +23,10 @@ export const router = createBrowserRouter([
     {
         path: "/register",
         element: <Register />,
+    },
+    {
+        path: "/home",
+        element: <LandingPage />
     },
     {
         path: "/",
@@ -38,9 +43,9 @@ export const router = createBrowserRouter([
             {
                 path: "settings",
                 element: (
-                    <ProtectedRoute adminOnly>
+                    // <ProtectedRoute adminOnly>
                         <Settings />
-                    </ProtectedRoute>
+                    // {/* </ProtectedRoute> */}
                 ),
             },
             { path: "simulations", element: <Simulations /> },

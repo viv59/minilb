@@ -278,7 +278,7 @@ function Field({ label, value, onChange, type = "text", required = false }) {
                 value={value}
                 required={required}
                 onChange={(e) => onChange(e.target.value)}
-                className="w-full rounded-lg border border-app-border bg-[#0d0f1e] px-3 py-2 text-sm outline-none focus:border-accent1"
+                className="w-full rounded-lg border border-app-border bg-inherit px-3 py-2 text-sm outline-none focus:border-accent1"
             />
         </div>
     );
@@ -302,7 +302,7 @@ function Select({
                 required={required}
                 disabled={disabled}
                 onChange={(e) => onChange(e.target.value)}
-                className="w-full rounded-lg border border-app-border bg-[#0d0f1e] px-3 py-2 text-sm outline-none focus:border-accent1 disabled:opacity-50"
+                className="w-full rounded-lg border border-app-border bg-inherit px-3 py-2 text-sm outline-none focus:border-accent1 disabled:opacity-50"
             >
                 <option value="">Select…</option>
                 {options.map((opt) => (

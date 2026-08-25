@@ -5,7 +5,7 @@ import { ServerUIProvider } from "./context/ServerContext.jsx";
 
 import Toast from "./components/common/Toast";
 import ToastContainer from "./components/common/ToastContainer";
-import { useToastStore } from "./store/toastStore";
+import { useToastStore } from "./store/ToastStore";
 
 export default function App() {
     const { toasts, removeToast } = useToastStore();
