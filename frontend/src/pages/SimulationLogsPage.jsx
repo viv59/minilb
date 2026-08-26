@@ -5,6 +5,7 @@ import Loader from "../components/common/Loader.jsx";
 import Button from "../components/common/Button.jsx";
 import { useSimulation } from "../hooks/useSimulation.js";
 import { ALGORITHM_OPTIONS } from "../utils/algorithms.js";
+import { useAuthStore } from '../store/authStore.js'
 
 const PAGE_SIZE = 10;
 
@@ -42,6 +43,8 @@ export default function SimulationLogsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [page, setPage] = useState(1);
     const [startError, setStartError] = useState(null);
+    const isAdmin = useAuthStore((s) => s.isAdmin())
+
 
     useEffect(() => {
         fetchSimulations();
@@ -123,13 +126,15 @@ export default function SimulationLogsPage() {
                     <table className="w-full border-collapse text-sm">
                         <thead>
                             <tr className="border-b border-app-border-soft text-left text-text-dim">
-                                <th className="py-2 pr-4 font-medium">ID</th>
+                                
+                                { <th className="py-2 pr-4 font-medium">ID</th> }
                                 <th className="py-2 pr-4 font-medium">Name</th>
                                 <th className="py-2 pr-4 font-medium">
                                     Algorithm
                                 </th>
                                 <th className="py-2 pr-4 font-medium">Status</th>
                                 <th className="py-2 pr-4 font-medium">Created</th>
+                                { isAdmin && <th className="py-2 pr-4 font-medium">User ID</th>}
                                 <th className="py-2 pr-4 text-right font-medium">
                                     Actions
                                 </th>
@@ -141,9 +146,9 @@ export default function SimulationLogsPage() {
                                     key={sim.id}
                                     className="border-b border-app-border-soft/50 text-app-text"
                                 >
-                                    <td className="py-2.5 pr-4 text-text-dim">
+                                    {<td className="py-2.5 pr-4 text-text-dim">
                                         {String(sim.id).padStart(2, "0")}
-                                    </td>
+                                    </td> }
                                     <td
                                         className="cursor-pointer py-2.5 pr-4 hover:underline"
                                         onClick={() => handleSelectSimulation(sim)}
@@ -170,6 +175,9 @@ export default function SimulationLogsPage() {
                                               })}`
                                             : "-"}
                                     </td>
+                                    { isAdmin && <td className="py-2.5 pr-4 text-text-dim">
+                                        {String(sim.user_id)}
+                                    </td> }
                                     <td className="py-2.5 pr-4">
                                         <div className="flex justify-end gap-3 text-text-dim">
                                             {sim.status === "CREATED" && (

@@ -1,53 +1,4 @@
-export const initialServers = [
-    {
-        id: "srv_001",
-        name: "Server 1",
-        status: "Healthy",
-        ip: "172.18.0.5",
-        port: 8001,
-        cpu: 23,
-        memory: 41,
-        reqMin: 342,
-        uptime: "2h 45m 12s",
-        created: "May 20, 2024 10:30 AM",
-    },
-    {
-        id: "srv_002",
-        name: "Server 2",
-        status: "Healthy",
-        ip: "172.18.0.6",
-        port: 8002,
-        cpu: 31,
-        memory: 48,
-        reqMin: 298,
-        uptime: "2h 40m 03s",
-        created: "May 20, 2024 10:31 AM",
-    },
-    {
-        id: "srv_003",
-        name: "Server 3",
-        status: "Healthy",
-        ip: "172.18.0.7",
-        port: 8003,
-        cpu: 28,
-        memory: 36,
-        reqMin: 301,
-        uptime: "2h 38m 51s",
-        created: "May 20, 2024 10:32 AM",
-    },
-    {
-        id: "srv_004",
-        name: "Server 4",
-        status: "Healthy",
-        ip: "172.18.0.8",
-        port: 8004,
-        cpu: 26,
-        memory: 39,
-        reqMin: 304,
-        uptime: "2h 33m 20s",
-        created: "May 20, 2024 10:33 AM",
-    },
-];
+import { Activity, SlidersHorizontal, ShieldCheck, PlayCircle } from "lucide-react";
 
 export const DONUT_COLORS = [
     "#7c5cff",
@@ -146,3 +97,26 @@ export const locationData = {
     ]
   }
 }
+
+export const FEATURES = [
+    {
+        icon: Activity,
+        title: "Live health monitoring",
+        body: "Every server's state — healthy, in maintenance, or down — visible at a glance, color-coded the same way across the whole app.",
+    },
+    {
+        icon: PlayCircle,
+        title: "Run traffic before you ship it",
+        body: "Simulate waves of requests against any algorithm and watch exactly how load would move, before it touches production.",
+    },
+    {
+        icon: SlidersHorizontal,
+        title: "Filter down to what matters",
+        body: "Slice your fleet by any field and operator — region, status, tags — and apply it in seconds.",
+    },
+    {
+        icon: ShieldCheck,
+        title: "Role-aware by default",
+        body: "Admins manage servers and algorithms. Everyone else gets the same clarity, read-only.",
+    },
+];

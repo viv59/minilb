@@ -266,9 +266,9 @@ function Select({
                 onChange={(e) => onChange(e.target.value)}
                 className="w-full rounded-lg border border-app-border bg-inherit px-3 py-2 text-sm outline-none focus:border-accent1 disabled:opacity-50"
             >
-                <option value="">Select…</option>
+                <option value="">Select</option>
                 {options.map((opt) => (
-                    <option key={opt} value={opt}>
+                    <option key={opt} value={opt} className="bg-app-panel text-app-text">
                         {opt}
                     </option>
                 ))}

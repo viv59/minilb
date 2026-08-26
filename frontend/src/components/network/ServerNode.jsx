@@ -91,6 +91,15 @@ const ServerNode = forwardRef(function ServerNode(
                     </span>
                 </div>
                 <div className="mt-2 flex items-center justify-between text-xs text-text-faint">
+                    <span>Port</span>
+                    <span className="font-semibold text-app-text">
+                        {server.port !== null &&
+                        server.port !== undefined
+                            ? server.port
+                            : 0}
+                    </span>
+                </div>
+                <div className="mt-2 flex items-center justify-between text-xs text-text-faint">
                     <span>Handled requests</span>
                     <span className="font-semibold text-app-text">
                         {handledRequests !== null &&

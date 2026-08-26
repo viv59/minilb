@@ -83,6 +83,8 @@ class Simulation(Base):
     name = Column(String, nullable=False)
     algorithm = Column(String, nullable=False, default="round_robin")
 
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+
     traffic_waves = Column(JSON, nullable=False)
 
     status = Column(Enum(SimulationStatus), default=SimulationStatus.CREATED)
@@ -90,3 +92,5 @@ class Simulation(Base):
     result_summary = Column(JSON, nullable=True)
 
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    owner = relationship("User")

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from services.filter_engine import FilterError, FilterInput, _allowed_ops_for_column, build_filter, describe_model_fields
 from database.database import SessionLocal, get_db
-from models.db_model import Server, ServerHealth, User, UserRole
+from models.db_model import Server, ServerHealth, User, UserRole, Simulation
 from models.schema import ServerCreate, ServerUpdate
 
 from core.logger import logger
@@ -42,7 +42,7 @@ def get_servers(db: Session = Depends(get_db), _: User = Depends(get_current_use
     logger.info("Get all servers")
 
     # drop_table(User)
-    # User.__table__.drop(bind=db.bind)
+    # Simulation.__table__.drop(bind=db.bind)
 
     servers = (
         db.query(Server)

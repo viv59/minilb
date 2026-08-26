@@ -4,47 +4,19 @@ import {
     Server as ServerIcon,
     Globe,
     ArrowRight,
-    Activity,
-    SlidersHorizontal,
-    ShieldCheck,
-    PlayCircle,
 } from "lucide-react";
 import Button from "../components/common/Button.jsx";
 import Card from "../components/common/Card.jsx";
+import { ALGORITHM_OPTIONS } from "../utils/algorithms.js"; 
+import { FEATURES } from "../utils/constants.js";
 
 // Swap these for your real ALGORITHM_OPTIONS (utils/algorithms.js) if you
 // want the badges to reflect exactly what the app supports.
-const ALGORITHM_BADGES = [
-    "Round Robin",
-    "Least Connections",
-    "Weighted Round Robin",
-    "IP Hash",
-    "Random",
-];
 
-const FEATURES = [
-    {
-        icon: Activity,
-        title: "Live health monitoring",
-        body: "Every server's state — healthy, in maintenance, or down — visible at a glance, color-coded the same way across the whole app.",
-    },
-    {
-        icon: PlayCircle,
-        title: "Run traffic before you ship it",
-        body: "Simulate waves of requests against any algorithm and watch exactly how load would move, before it touches production.",
-    },
-    {
-        icon: SlidersHorizontal,
-        title: "Filter down to what matters",
-        body: "Slice your fleet by any field and operator — region, status, tags — and apply it in seconds.",
-    },
-    {
-        icon: ShieldCheck,
-        title: "Role-aware by default",
-        body: "Admins manage servers and algorithms. Everyone else gets the same clarity, read-only.",
-    },
-];
 
+
+// Currently unused (HeroDiagram is disabled below) — kept here so it's a
+// one-line uncomment to bring back, rather than rebuilding it later.
 function DiagramNode({ icon: Icon, tone = "neutral", label, className = "" }) {
     const toneClasses = {
         neutral: "border-app-border-soft bg-app-panel text-app-text",
@@ -71,37 +43,10 @@ function HeroDiagram() {
                 className="absolute inset-0 h-full w-full motion-reduce:[&_path]:animate-none"
                 fill="none"
             >
-                <path
-                    d="M60 130 H180"
-                    stroke="rgb(var(--color-border))"
-                    strokeWidth="2"
-                    strokeDasharray="5 9"
-                    className="animate-dash"
-                />
-                <path
-                    d="M240 130 C 280 130, 280 55, 320 55"
-                    stroke="rgb(var(--color-status-green))"
-                    strokeOpacity="0.5"
-                    strokeWidth="2"
-                    strokeDasharray="5 9"
-                    className="animate-dash"
-                />
-                <path
-                    d="M240 130 H320"
-                    stroke="rgb(var(--color-status-green))"
-                    strokeOpacity="0.5"
-                    strokeWidth="2"
-                    strokeDasharray="5 9"
-                    className="animate-dash"
-                />
-                <path
-                    d="M240 130 C 280 130, 280 205, 320 205"
-                    stroke="rgb(var(--color-status-yellow))"
-                    strokeOpacity="0.5"
-                    strokeWidth="2"
-                    strokeDasharray="5 9"
-                    className="animate-dash"
-                />
+                <path d="M60 130 H180" stroke="rgb(var(--color-border))" strokeWidth="2" strokeDasharray="5 9" className="animate-dash" />
+                <path d="M240 130 C 280 130, 280 55, 320 55" stroke="rgb(var(--color-status-green))" strokeOpacity="0.5" strokeWidth="2" strokeDasharray="5 9" className="animate-dash" />
+                <path d="M240 130 H320" stroke="rgb(var(--color-status-green))" strokeOpacity="0.5" strokeWidth="2" strokeDasharray="5 9" className="animate-dash" />
+                <path d="M240 130 C 280 130, 280 205, 320 205" stroke="rgb(var(--color-status-yellow))" strokeOpacity="0.5" strokeWidth="2" strokeDasharray="5 9" className="animate-dash" />
             </svg>
 
             <DiagramNode icon={Globe} label="Client" className="left-0 top-1/2 -translate-y-1/2" />
@@ -124,38 +69,38 @@ export default function LandingPage() {
                     </div>
                     <span className="text-sm font-semibold font-mono tracking-tight">miniLB</span>
                 </div>
-                <Link to="/">
+                <Link to="/simulations">
                     <Button variant="outline" className="text-xs">
-                        Open Dashboard
+                        Start Now!
                     </Button>
                 </Link>
             </header>
 
-            {/* Hero */}
-            <section className="mx-auto max-w-6xl items-center gap-12 px-6 py-16 sm:px-10 lg:grid-cols-2 lg:py-24">
-                <div>
-                    <span className="font-mono text-[11px] uppercase tracking-widest text-text-faint">
-                        Load balancer simulator
-                    </span>
-                    <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
-                        Watch traffic decisions
-                        <br />
-                        before you make them.
-                    </h1>
-                    <p className="mt-5 max-w-md text-[15px] leading-relaxed text-text-dim">
-                        miniLB simulates load-balancing algorithms against live server health, so you can see
-                        exactly how requests would route — before that config ever touches production.
-                    </p>
-                    <div className="mt-8 flex flex-wrap items-center gap-3">
-                        <Link to="/">
-                            <Button className="flex items-center gap-1.5">
-                                Open Dashboard <ArrowRight size={15} />
-                            </Button>
-                        </Link>
-                        <Link to="/simulation-logs">
-                            <Button variant="ghost">View simulation logs</Button>
-                        </Link>
-                    </div>
+            {/* Hero — single centered column while HeroDiagram is disabled.
+                If you re-enable HeroDiagram, wrap this div and <HeroDiagram />
+                in a parent with `grid grid-cols-1 items-center gap-12 lg:grid-cols-2`. */}
+            <section className="mx-auto max-w-2xl px-6 py-16 text-center sm:px-10 lg:py-24">
+                <span className="font-mono text-[11px] uppercase tracking-widest text-text-faint">
+                    Load balancer simulator
+                </span>
+                <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
+                    Watch traffic decisions
+                    <br />
+                    before you make them.
+                </h1>
+                <p className="mx-auto mt-5 max-w-md text-[15px] leading-relaxed text-text-dim">
+                    miniLB simulates load-balancing algorithms against live server health, so you can see
+                    exactly how requests would route — before that config ever touches production.
+                </p>
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                    <Link to="/dashboard">
+                        <Button className="flex items-center gap-1.5">
+                            Open Dashboard <ArrowRight size={15} />
+                        </Button>
+                    </Link>
+                    <Link to="/simulation-logs">
+                        <Button variant="ghost">View simulation logs</Button>
+                    </Link>
                 </div>
 
                 {/* <HeroDiagram /> */}
@@ -172,7 +117,7 @@ export default function LandingPage() {
                         <div key={s.label} className="flex items-center gap-2.5">
                             <span className={`h-2 w-2 rounded-full bg-${s.tone}`} />
                             <span className="text-sm font-medium text-app-text">{s.label}</span>
-                            <span className="text-xs text-text-faint">— {s.body}</span>
+                            <span className="text-xs text-text-faint"> {s.body}</span>
                         </div>
                     ))}
                 </div>
@@ -200,12 +145,12 @@ export default function LandingPage() {
                         Supported algorithms
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
-                        {ALGORITHM_BADGES.map((name) => (
+                        {ALGORITHM_OPTIONS.map((name,i) => (
                             <span
-                                key={name}
+                                key={name.label}
                                 className="rounded-full border border-app-border px-3 py-1 font-mono text-[11px] text-text-dim"
                             >
-                                {name}
+                                {name.label}
                             </span>
                         ))}
                     </div>
@@ -217,15 +162,15 @@ export default function LandingPage() {
                 <h2 className="text-2xl font-semibold tracking-tight">
                     See your fleet the way your traffic sees it.
                 </h2>
-                <Link to="/" className="mt-6 inline-block">
+                <Link to="/dashboard" className="mt-6 inline-block">
                     <Button className="flex items-center gap-1.5">
                         Open Dashboard <ArrowRight size={15} />
                     </Button>
                 </Link>
             </section>
 
-            <footer className="border-t border-app-border-soft py-6 text-center text-[11px] text-text-faint italic">
-                Made with 🧡
+            <footer className="border-t border-app-border-soft py-6 text-center text-[11px] text-text-faint">
+                Made with 🧡 by Vivek Gaikwad
             </footer>
         </div>
     );

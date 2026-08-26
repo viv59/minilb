@@ -22,14 +22,20 @@ router = APIRouter(prefix="/simulations", tags=["simulations"])
 ws_manager = WebSocketManager()
 running_engines: dict[int, SimulationEngine] = {}
 
+def _check_owns_or_admin(sim: Simulation, user: User):
+    """Shared guard - raises 404 (not 403) so a non-owner can't distinguish
+    "doesn't exist" from "exists but isn't yours"."""
+    if user.role != "admin" and sim.user_id != user.id:
+        raise HTTPException(404, "Simulation not found")
 
 @router.post("/", response_model=SimulationOut)
-def create_simulation(payload: SimulationCreate, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+def create_simulation(payload: SimulationCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     sim = Simulation(
         name=payload.simulation_name,
         algorithm=payload.algorithm,
         traffic_waves=[w.dict() for w in payload.traffic_waves],
         status=SimulationStatus.CREATED,
+        user_id=current_user.id
     )
     db.add(sim)
     db.commit()
@@ -38,23 +44,36 @@ def create_simulation(payload: SimulationCreate, db: Session = Depends(get_db), 
 
 
 @router.get("/", response_model=list[SimulationOut])
-def list_simulations(db: Session = Depends(get_db), _: User = Depends(get_current_user)):
-    return db.query(Simulation).all()
+def list_simulations(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    query = db.query(Simulation)
+
+    if current_user.role != "admin":
+        query = query.filter(Simulation.user_id == current_user.id)  # reassign!
+
+    return query.all()
 
 
 @router.get("/{sim_id}", response_model=SimulationOut)
-def get_simulation(sim_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+def get_simulation(sim_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     sim = db.query(Simulation).get(sim_id)
     if not sim:
         raise HTTPException(404, "Simulation not found")
+
+    # a non-admin trying to view someone else's simulation gets the same
+    # 404 as "doesn't exist" - don't leak that a resource exists but is
+    # someone else's, that's an unnecessary information disclosure
+    _check_owns_or_admin(sim, current_user)
+    
     return sim
 
 
 @router.post("/{sim_id}/start")
-async def start_simulation(sim_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db),_: User = Depends(get_current_user)):
+async def start_simulation(sim_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     sim = db.query(Simulation).get(sim_id)
     if not sim:
         raise HTTPException(404, "Simulation not found")
+    
+    _check_owns_or_admin(sim, current_user)
 
     if sim.status == SimulationStatus.RUNNING:
         raise HTTPException(400, "Simulation already running")
@@ -103,7 +122,14 @@ async def _run_and_cleanup(sim_id: int, engine: SimulationEngine):
 
 
 @router.post("/{sim_id}/stop")
-def stop_simulation(sim_id: int, _: User = Depends(get_current_user)):
+def stop_simulation(sim_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+
+    sim = db.query(Simulation).get(sim_id)    
+    if not sim:
+        raise HTTPException(404, "Simulation not found!")
+
+    _check_owns_or_admin(sim, current_user)
+
     engine = running_engines.get(sim_id)
     if not engine:
         raise HTTPException(400, "Simulation is not currently running")
@@ -113,22 +139,26 @@ def stop_simulation(sim_id: int, _: User = Depends(get_current_user)):
 
 
 @router.get("/{sim_id}/logs")
-def get_simulation_logs(sim_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+def get_simulation_logs(sim_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Fetch logs for a specific simulation"""
     sim = db.query(Simulation).get(sim_id)
     if not sim:
         raise HTTPException(404, "Simulation not found")
+
+    _check_owns_or_admin(sim, current_user)
     
     logs = get_simulation_log_content(sim_id)
     return {"simulation_id": sim_id, "logs": logs}
 
 
 @router.delete("/{sim_id}/logs")
-def delete_logs(sim_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+def delete_logs(sim_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Delete logs for a specific simulation"""
     sim = db.query(Simulation).get(sim_id)
     if not sim:
         raise HTTPException(404, "Simulation not found")
+
+    _check_owns_or_admin(sim, current_user)
     
     if delete_simulation_log(sim_id):
         return {"message": "Logs deleted successfully"}
@@ -136,7 +166,7 @@ def delete_logs(sim_id: int, db: Session = Depends(get_db), _: User = Depends(ge
         raise HTTPException(404, "No logs found for this simulation")
 
 @router.post("/{sim_id}/duplicate",response_model=SimulationOut)
-def duplicate_simulation(sim_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+def duplicate_simulation(sim_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     original = (
         db.query(Simulation)
         .filter(Simulation.id == sim_id)
@@ -149,11 +179,14 @@ def duplicate_simulation(sim_id: int, db: Session = Depends(get_db), _: User = D
             detail="Simulation not found"
         )
 
+    _check_owns_or_admin(original, current_user)
+
     duplicate = Simulation(
         name=f"{original.name}_dup",
         algorithm=original.algorithm,
         traffic_waves=original.traffic_waves,
-        status=SimulationStatus.CREATED
+        status=SimulationStatus.CREATED,
+        user_id=current_user.id,
     )
 
     db.add(duplicate)
@@ -172,13 +205,15 @@ def delete_all_simulations(db: Session = Depends(get_db), _: User = Depends(requ
     return {"message": "All simulations deleted", "deleted_count": deleted_count}
 
 @router.delete("/{sim_id}")
-def delete_simulation(sim_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+def delete_simulation(sim_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Delete a specific simulation"""
 
     sim = db.query(Simulation).filter(Simulation.id == sim_id).first()
 
     if not sim:
         raise HTTPException(404, "Simulation not found")
+
+    _check_owns_or_admin(sim_id,current_user)
     
     # Try to delete logs if they exist, but don't fail if they don't
     delete_simulation_log(sim_id)
@@ -201,6 +236,15 @@ async def simulation_ws(websocket: WebSocket, sim_id: int, token: str = Query(..
     try:
         user = db.query(User).filter(User.id == int(payload.get("sub", -1))).first()
         if user is None or not user.is_active:
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return
+
+        sim = db.query(Simulation).get(sim_id)
+        if sim is None:
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return
+
+        if user.role != "admin" and sim.user_id != user.id:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
     finally:

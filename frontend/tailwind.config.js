@@ -24,9 +24,9 @@ export default {
         'status-yellow': 'var(--color-status-yellow)',
         'status-red': 'var(--color-status-red)',
       },
-            fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['SFMono-Regular', 'Menlo', 'monospace'],
+        fontFamily: {
+          sans: ['Inter', 'system-ui', 'sans-serif'],
+          mono: ['SFMono-Regular', 'Menlo', 'monospace'],
       },
     },
   },

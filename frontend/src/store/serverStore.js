@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { serverApi } from '../api/serverApi.js'
-import { ALGORITHMS } from '../utils/algorithms.js'
+// import { ALGORITHMS } from '../utils/algorithms.js'
 import { useToastStore } from './ToastStore.js'
 
 // One empty condition row, used as the default/starting state of the
@@ -65,12 +65,12 @@ export const useServerStore = create((set, get) => ({
         });
   },
 
-  cycleAlgorithm: () =>
-    set((state) => ({
-      algorithmIndex: (state.algorithmIndex + 1) % ALGORITHMS.length,
-    })),
+  // cycleAlgorithm: () =>
+  //   set((state) => ({
+  //     algorithmIndex: (state.algorithmIndex + 1) % ALGORITHMS.length,
+  //   })),
 
-  setAlgorithmIndex: (index) => set({ algorithmIndex: index }),
+  // setAlgorithmIndex: (index) => set({ algorithmIndex: index }),
 
   // --- filtering actions ---
 

@@ -1,5 +1,5 @@
 import Card from '../components/common/Card.jsx'
-import { ALGORITHMS } from '../utils/algorithms.js'
+// import { ALGORITHMS } from '../utils/algorithms.js'
 import { useServerStore } from '../store/serverStore.js'
 import { ALGORITHM_OPTIONS } from '../utils/algorithms.js'
 

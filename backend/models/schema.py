@@ -111,6 +111,7 @@ class SimulationOut(BaseModel):
     id: int
     name: str
     algorithm: str
+    user_id: int
     status: str
     traffic_waves: list
     result_summary: Optional[dict] = None
