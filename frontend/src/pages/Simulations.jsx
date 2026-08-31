@@ -6,6 +6,7 @@ import Button from "../components/common/Button.jsx";
 import Loader from "../components/common/Loader.jsx";
 import { useSimulation } from "../hooks/useSimulation.js";
 import { useServers } from '../hooks/useServers.js'
+import { useSettingsStore } from '../store/settingsStore.js'
 import { ALGORITHM_OPTIONS } from "../utils/algorithms.js";
 
 export default function Simulations() {
@@ -19,13 +20,15 @@ export default function Simulations() {
         startSimulation,
     } = useSimulation();
 
+    const defaultAlgorithm = useSettingsStore((s) => s.defaultAlgorithm)
+
     const [name, setName] = useState(() => {
         const short =
-            ALGORITHM_OPTIONS.find(a => a.value === "round_robin")?.short_form ?? "";
+            ALGORITHM_OPTIONS.find(a => a.value === defaultAlgorithm)?.short_form ?? "";
 
         return generateSimulationName("Sim", short);
     });
-    const [algorithm, setAlgorithm] = useState("round_robin");
+    const [algorithm, setAlgorithm] = useState(defaultAlgorithm);
     const [waves, setWaves] = useState([
         { wave: 1, requests: 100, interval_ms: 50 },
     ]);
@@ -92,12 +95,12 @@ export default function Simulations() {
             // Reset form
             // setName("demo-run");
 
-            const short = ALGORITHM_OPTIONS.find(a => a.value === "round_robin")?.short_form ?? "";
+            const short = ALGORITHM_OPTIONS.find(a => a.value === defaultAlgorithm)?.short_form ?? "";
 
             setName(generateSimulationName("Sim", short));
 
             // setName(generateSimulationName("rr"));
-            setAlgorithm("round_robin");
+            setAlgorithm(defaultAlgorithm);
             setWaves([{ wave: 1, requests: 100, interval_ms: 50 }]);
 
             // Refetch simulations

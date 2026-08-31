@@ -14,6 +14,7 @@ import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
+import AlgorithmDetail from "./pages/AlgorithmDetail.jsx";
 
 export const router = createBrowserRouter([
     // Public — "/" is the marketing landing page now, reachable with no auth.
@@ -43,6 +44,7 @@ export const router = createBrowserRouter([
             { path: "/dashboard", element: <Dashboard /> },
             { path: "/servers", element: <Servers /> },
             { path: "/algorithms", element: <Algorithms /> },
+            { path: "/algorithms/:algoValue", element: <AlgorithmDetail /> },
             { path: "/analytics", element: <Analytics /> },
             {
                 path: "/settings",
