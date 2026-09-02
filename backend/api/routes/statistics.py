@@ -1,7 +1,7 @@
 import statistics
 
 from sqlalchemy import case, func
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from database.database import get_db
@@ -9,6 +9,7 @@ from core.logger import logger
 from models.db_model import Server, ServerHealth, Simulation, User
 from core.auth import require_admin
 
+from core.rate_limiter import limiter
 
 router = APIRouter(prefix="/stats", tags=["Statistics"])
 
@@ -16,7 +17,9 @@ ERROR_RATE_THRESHOLD = 0.05
 
 
 @router.get("/")
+@limiter.limit("30/minute")
 def get_server_stats(
+    request: Request,
     db: Session = Depends(get_db),
     _: User = Depends(require_admin),
 ):

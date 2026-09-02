@@ -1,6 +1,6 @@
 import asyncio
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query, status, Request
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -15,6 +15,7 @@ from models.db_model import Server, Simulation, SimulationStatus, User
 from models.schema import SimulationCreate, SimulationOut
 
 from core.auth import get_current_user, require_admin
+from core.rate_limiter import limiter
 
 router = APIRouter(prefix="/simulations", tags=["simulations"])
 
@@ -29,7 +30,8 @@ def _check_owns_or_admin(sim: Simulation, user: User):
         raise HTTPException(404, "Simulation not found")
 
 @router.post("/", response_model=SimulationOut)
-def create_simulation(payload: SimulationCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+@limiter.limit("15/minute")
+def create_simulation(request: Request, payload: SimulationCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     sim = Simulation(
         name=payload.simulation_name,
         algorithm=payload.algorithm,
@@ -44,7 +46,8 @@ def create_simulation(payload: SimulationCreate, db: Session = Depends(get_db), 
 
 
 @router.get("/", response_model=list[SimulationOut])
-def list_simulations(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+@limiter.limit("60/minute")
+def list_simulations(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     query = db.query(Simulation)
 
     if current_user.role != "admin":
@@ -68,7 +71,8 @@ def get_simulation(sim_id: int, db: Session = Depends(get_db), current_user: Use
 
 
 @router.post("/{sim_id}/start")
-async def start_simulation(sim_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+@limiter.limit("10/minute")
+async def start_simulation(request: Request, sim_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     sim = db.query(Simulation).get(sim_id)
     if not sim:
         raise HTTPException(404, "Simulation not found")
@@ -122,7 +126,8 @@ async def _run_and_cleanup(sim_id: int, engine: SimulationEngine):
 
 
 @router.post("/{sim_id}/stop")
-def stop_simulation(sim_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+@limiter.limit("20/minute")
+def stop_simulation(request: Request, sim_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
 
     sim = db.query(Simulation).get(sim_id)    
     if not sim:
@@ -166,7 +171,8 @@ def delete_logs(sim_id: int, db: Session = Depends(get_db), current_user: User =
         raise HTTPException(404, "No logs found for this simulation")
 
 @router.post("/{sim_id}/duplicate",response_model=SimulationOut)
-def duplicate_simulation(sim_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+@limiter.limit("10/minute")
+def duplicate_simulation(request: Request, sim_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     original = (
         db.query(Simulation)
         .filter(Simulation.id == sim_id)
@@ -205,7 +211,8 @@ def delete_all_simulations(db: Session = Depends(get_db), _: User = Depends(requ
     return {"message": "All simulations deleted", "deleted_count": deleted_count}
 
 @router.delete("/{sim_id}")
-def delete_simulation(sim_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+@limiter.limit("10/minute")
+def delete_simulation(request: Request, sim_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Delete a specific simulation"""
 
     sim = db.query(Simulation).filter(Simulation.id == sim_id).first()

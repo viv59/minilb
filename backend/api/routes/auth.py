@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -7,12 +7,14 @@ from models.db_model import User, UserRole
 from models.schema import UserRegister, UserOut, Token
 from core.security import hash_password, verify_password, create_access_token
 from core.auth import get_current_user
+from core.rate_limiter import limiter
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 @router.post("/register", response_model=UserOut)
-def register(payload: UserRegister, db: Session = Depends(get_db)):
+@limiter.limit("3/minute")
+def register(request: Request, payload: UserRegister, db: Session = Depends(get_db)):
     existing = db.query(User).filter(User.email == payload.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -33,7 +35,8 @@ def register(payload: UserRegister, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=Token)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     # OAuth2PasswordRequestForm uses `username` as the field name by spec,
     # even though we're treating it as an email here
     user = db.query(User).filter(User.email == form_data.username).first()
@@ -53,5 +56,6 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
 
 @router.get("/me", response_model=UserOut)
-def get_me(user: User = Depends(get_current_user)):
+@limiter.limit("30/minute")
+def get_me(request: Request, user: User = Depends(get_current_user)):
     return user

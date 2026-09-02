@@ -11,6 +11,7 @@ from core.load_balancer import LoadBalancer, build_runtime_servers
 from typing import Dict, List
 
 from core.auth import get_current_user, require_admin
+from core.rate_limiter import limiter
 
 import httpx
 
@@ -19,7 +20,8 @@ router = APIRouter(prefix="/servers", tags=["Servers"])
 load_balancer = LoadBalancer()
 
 @router.post("/")
-def create_server(server: ServerCreate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
+@limiter.limit("20/minute")
+def create_server(request: Request, server: ServerCreate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     new_server = Server(**server.dict(), status=True)
 
     db.add(new_server)
@@ -37,7 +39,8 @@ def create_server(server: ServerCreate, db: Session = Depends(get_db), _: User =
     }
 
 @router.get("/")
-def get_servers(db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+@limiter.limit("60/minute")
+def get_servers(request: Request, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
 
     logger.info("Get all servers")
 
@@ -62,7 +65,8 @@ def get_servers(db: Session = Depends(get_db), _: User = Depends(get_current_use
     }
 
 @router.put("/{server_id}")
-def update_server(server_id: int, server: ServerUpdate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
+@limiter.limit("30/minute")
+def update_server(request: Request, server_id: int, server: ServerUpdate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
 
     db_server = db.query(Server).filter(Server.id == server_id).first()
 
@@ -86,7 +90,8 @@ def update_server(server_id: int, server: ServerUpdate, db: Session = Depends(ge
     }
 
 @router.delete("/{server_id}")
-def delete_server(server_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
+@limiter.limit("20/minute")
+def delete_server(request: Request, server_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
 
     # Can use soft delete??
     server = db.query(Server).filter(Server.id == server_id).first()
