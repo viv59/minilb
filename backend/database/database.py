@@ -35,3 +35,29 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def _bootstrap():
+    """
+    Runs once, when this module is first imported: creates all tables
+    and seeds the default admin if one doesn't exist yet.
+
+    Imports below are deliberately deferred to inside this function,
+    not the top of the file - models/db_model.py does
+    `from database.database import Base`, so importing it before Base
+    is defined here would be a circular import. By this point in the
+    file, Base already exists, so the circular reference resolves fine.
+    """
+    from models import db_model  # noqa: F401 - import registers models on Base.metadata
+    from core.bootstrap import create_default_admin
+
+    Base.metadata.create_all(bind=engine)
+
+    db = SessionLocal()
+    try:
+        create_default_admin(db)
+    finally:
+        db.close()
+
+
+_bootstrap()
