@@ -15,6 +15,7 @@ import Register from "./pages/Register.jsx";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 import AlgorithmDetail from "./pages/AlgorithmDetail.jsx";
+import NotFound from "./pages/NotFound.jsx";
 
 export const router = createBrowserRouter([
     // Public — "/" is the marketing landing page now, reachable with no auth.
@@ -59,5 +60,9 @@ export const router = createBrowserRouter([
             { path: "/simulation-logs", element: <SimulationLogsPage /> },
             { path: "/simulation-log/:simId", element: <SimulationLog /> },
         ],
+    },
+    {
+        path:"*",
+        element: <NotFound />
     },
 ]);

@@ -1,142 +1,273 @@
-# minilb (backend)
+# minilb backend
 
-This README describes the important backend logic, API surface, data structures and how to run the service for the minilb project (custom load balancer).
+This backend powers the mini load balancer dashboard and simulation engine. It exposes FastAPI routes for authentication, server management, simulation orchestration, and analytics.
 
 ## Overview
 
-- FastAPI application that manages backend servers and provides the basic building blocks for a simple load balancer.
-- Uses SQLAlchemy for persistence. Tables are created automatically at startup (`Base.metadata.create_all`).
-- Load balancing logic is implemented in `core/load_balancer.py` and pluggable algorithms live under `core/algorithms/` (currently Round Robin).
+- FastAPI app with SQLAlchemy persistence and JWT-based authentication.
+- Server and simulation data are stored in SQLite by default, with PostgreSQL support via `DATABASE_URL`.
+- The API supports user registration/login, admin-only server mutation, simulation execution, and WebSocket-based live updates.
+- The app is designed around a load balancer runtime and multiple simulation algorithms.
 
-## Key directories & files
+## Key modules
 
-- `main.py` — FastAPI app bootstrap, router registration and CORS config.
-- `api/routes/server.py` — REST endpoints for creating, listing, updating and deleting servers.
-- `core/load_balancer.py` — load balancer class that selects next server using configured algorithm.
-- `core/algorithms/round_robin.py` — example algorithm implementation.
-- `database/database.py` — SQLAlchemy engine, session, and `get_db` dependency.
-- `models/db_model.py` — ORM model definitions (Server, User).
-- `models/schema.py` — Pydantic request/response schemas used by API routes.
-- `core/logger.py` — application logger; logs written to `logs/`.
+- `main.py` — app bootstrap, CORS config, route registration, root route, health checks.
+- `database/database.py` — engine, session factory, Base metadata, and startup bootstrap logic.
+- `models/db_model.py` — ORM models for `Server`, `ServerHealth`, `User`, and `Simulation`.
+- `models/schema.py` — request/response schemas for the API.
+- `api/routes/auth.py` — registration, login, and authenticated user endpoint.
+- `api/routes/server.py` — CRUD, filtering, and server field metadata endpoints.
+- `api/routes/simulation.py` — simulation creation, start/stop, logs, duplicates, and websocket streaming.
+- `api/routes/statistics.py` — aggregate metrics for dashboard analytics.
+- `core/security.py` — password hashing and JWT operations.
+- `core/bootstrap.py` — creates the default admin account from environment variables.
+- `core/load_balancer.py` — runtime load balancing logic and server snapshot conversion.
+- `core/simulation_engine.py` — request simulation engine.
+- `core/websocket_manager.py` — live simulation updates over WebSocket.
 
-## Environment
+## Environment variables
 
-Required environment variables (example):
-
-- `DATABASE_URL` — SQLAlchemy database URL (e.g. `sqlite:///./dev.db` for local development).
-
-Install dependencies in a virtualenv or use `venv` in `lbenv/` provided in this repo.
-
-```
-python -m venv .venv
-source .venv/bin/activate   # (or .venv\Scripts\activate on Windows)
-pip install -r requirements.txt
-```
-
-## Run (development)
-
-Start the server with Uvicorn:
+Create a `.env` file in the backend root or export these variables before running the app:
 
 ```bash
+DATABASE_URL=sqlite:///./dev.db
+JWT_SECRET_KEY=change-me-in-production
+AUTH_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=StrongPassword123
+ADMIN_NAME=Admin
+```
+
+Notes:
+
+- If `DATABASE_URL` is not set, the app falls back to `sqlite:///./dev.db`.
+- If the database URL starts with `postgres://`, it is converted to the SQLAlchemy-compatible `postgresql://` form.
+- The default admin is created automatically if credentials are present and no matching admin already exists.
+
+## Install and run
+
+From the backend directory:
+
+```bash
+python -m venv lbenv
+lbenv\Scripts\activate   # Windows
+# or: source lbenv/bin/activate
+pip install -r requirements.txt
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The app will create DB tables automatically at startup.
+The app creates tables and bootstraps the default admin during import.
 
-## API Endpoints
+## API surface
 
-Base prefix: none (server router is mounted at `/servers` prefix in `main.py`).
+### Authentication
 
-- POST /servers/
-    - Purpose: create a new server record
-    - Request body (JSON):
-        ```json
-        {
-            "name": "backend-1",
-            "cpu": 2,
-            "memory": 2048,
-            "weight": 1
-        }
-        ```
-    - Response: created `Server` object and message.
+- `POST /auth/register`
+    - Creates a new user.
+    - Body: `name`, `email`, `password`.
 
-- GET /servers/
-    - Purpose: list servers
-    - Response: `{ count: number, servers: [ ... ] }` or a message when no servers exist.
+- `POST /auth/login`
+    - Uses OAuth2 password flow with `username` as the email value.
+    - Returns `access_token` and `token_type`.
 
-- PUT /servers/{server_id}
-    - Purpose: update server fields
-    - Request body: partial `ServerUpdate` fields (any of `name`, `cpu`, `memory`, `weight`, `status`)
-    - Response: updated server object and message.
+- `GET /auth/me`
+    - Returns the currently authenticated user.
 
-- DELETE /servers/{server_id}
-    - Purpose: delete a server record
+### Servers
 
-Notes about API implementation:
+- `POST /servers/`
+    - Admin-only.
+    - Creates a `Server` and an associated `ServerHealth` row.
 
-- `create_server` currently sets `url` to `http://localhost:8000` and `status` to boolean `True` by default — update as needed.
-- Responses are simple JSON objects and use SQLAlchemy models directly; you can adapt to Pydantic response models if stricter typing/serialization is required.
+- `GET /servers/`
+    - Authenticated user.
+    - Returns a paginated-style list object with `count` and `servers`.
 
-## Data model (Server)
+- `PUT /servers/{server_id}`
+    - Admin-only.
+    - Updates one or more server fields.
 
-SQLAlchemy model: `models/db_model.py`
+- `DELETE /servers/{server_id}`
+    - Admin-only.
+    - Removes the server and related health record.
 
-- `id` (Integer, PK)
-- `name` (String, required)
-- `url` (String, required)
-- `status` (Boolean) — represents server health/availability (True = healthy)
-- `weight` (Integer) — weight for weighted algorithms (default 1)
-- `cpu` (Integer)
-- `memory` (Integer)
+- `POST /servers/filter`
+    - Authenticated user.
+    - Builds a filter expression from a `FilterInput` payload.
 
-Pydantic schemas: `models/schema.py`
+- `GET /servers/filter/fields`
+    - Returns dynamic field metadata for the frontend filter builder.
 
-- `ServerCreate` — `name`, `cpu`, `memory`, `weight`
-- `ServerUpdate` — optional fields to patch existing server
+### Simulations
 
-Note: The front-end may expect `status` as text for display; backend stores it as boolean. Keep serialization consistent when returning to the frontend.
+- `POST /simulations/`
+    - Creates a simulation owned by the authenticated user.
 
-## Load Balancer Logic
+- `GET /simulations/`
+    - Lists simulations; non-admin users only see their own.
 
-- `core/load_balancer.py` maintains an in-memory `servers` list and delegates selection to an algorithm instance (`core/algorithms/round_robin.py`).
-- Current selection logic:
-    1.  Filter `self.servers` to `healthy_servers = [s for s in self.servers if s.healthy]`.
-    2.  Call algorithm `get_server(healthy_servers)` which returns the next server.
+- `GET /simulations/{sim_id}`
+    - Fetches a single simulation.
 
-Notes and caveats:
+- `POST /simulations/{sim_id}/start`
+    - Starts a simulation in the background.
 
-- The `Server` objects used by the LB are expected to have a `.healthy` attribute — ensure your model or wrapper exposes this boolean. The DB model uses `status` (Boolean) — consider mapping `status` -> `healthy` when building runtime server objects.
-- Weight-based algorithms are not implemented in `LoadBalancer` yet — `weight` is stored on the model for future use.
-- Consider adding periodic health checks that update server `status` in DB and/or runtime `healthy` flags.
+- `POST /simulations/{sim_id}/stop`
+    - Sends a cancel signal to the running engine.
 
-## Extending / Adding Algorithms
+- `GET /simulations/{sim_id}/logs`
+    - Returns stored simulation logs.
 
-- Add new algorithm under `core/algorithms/` with an interface method `get_server(list_of_servers)` and then instantiate it in `LoadBalancer.__init__`.
-- Example: implement weighted round-robin, least-connections, or health-aware routing.
+- `DELETE /simulations/{sim_id}/logs`
+    - Deletes saved logs.
 
-## Logs
+- `POST /simulations/{sim_id}/duplicate`
+    - Creates a copy of an existing simulation.
 
-- Application logs are written to `logs/app.log` and errors to `logs/error.log` (configured in `core/logger.py`).
+- `DELETE /simulations/{sim_id}`
+    - Deletes a simulation.
 
-## Notes & TODOs
+- `DELETE /simulations/`
+    - Admin-only bulk reset of all simulations.
 
-- Normalize `status` vs `healthy` naming between DB model and runtime objects.
-- Add health-checking background worker to populate server health and metrics.
-- Improve API responses to use Pydantic response models instead of raw SQLAlchemy models.
-- Make `url` configurable on server creation instead of hard-coding `http://localhost:8000`.
+- `WebSocket /simulations/ws/{sim_id}`
+    - Streams live simulation progress to an authenticated client using a JWT token in the query string.
 
-## Quick curl examples
+### Statistics
 
-Create server:
+- `GET /stats/`
+    - Admin-only.
+    - Returns server totals, health statistics, request distribution, and load-balance balance metrics.
+
+## Data model summary
+
+### Server
+
+The `Server` model includes:
+
+- `id`
+- `name`
+- `hostname`
+- `ip_address`
+- `port`
+- `status`
+- `maintenance_mode`
+- `weight`
+- `priority`
+- `max_connections`
+- `cpu`
+- `memory`
+- `region`
+- `country`
+- `datacenter`
+- `supports_sticky_session`
+- `created_at`
+- `updated_at`
+
+### ServerHealth
+
+Runtime metrics are stored in a one-to-one relation:
+
+- `active_connections`
+- `current_requests`
+- `response_time_ms`
+- `average_latency_ms`
+- `error_rate`
+- `cpu_usage`
+- `memory_usage`
+- `network_usage`
+- `last_health_check`
+
+### User
+
+- `name`
+- `email`
+- `hashed_password`
+- `role` (`admin` or `user`)
+- `is_active`
+- `created_at`
+
+### Simulation
+
+- `name`
+- `algorithm`
+- `user_id`
+- `traffic_waves`
+- `status`
+- `result_summary`
+- `created_at`
+
+## Authentication and authorization
+
+- JWT is used for API auth.
+- `get_current_user()` validates the token and loads the user from the database.
+- `require_admin()` restricts admin-only endpoints.
+- Rate limiting is enforced via `slowapi` and keyed by authenticated user or IP when unauthenticated.
+
+## Example requests
+
+Register a user:
+
+```bash
+curl -X POST http://localhost:8000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Demo User","email":"demo@example.com","password":"StrongPassword123"}'
+```
+
+Login:
+
+```bash
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  --data-urlencode "username=demo@example.com" \
+  --data-urlencode "password=StrongPassword123"
+```
+
+Create a server:
 
 ```bash
 curl -X POST http://localhost:8000/servers/ \
-	-H "Content-Type: application/json" \
-	-d '{"name":"backend-1","cpu":2,"memory":1024,"weight":1}'
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "name": "backend-1",
+    "hostname": "backend-1.local",
+    "ip_address": "127.0.0.1",
+    "port": 8001,
+    "weight": 2,
+    "cpu": 4,
+    "memory": 4096,
+    "region": "us-east",
+    "supports_sticky_session": true
+  }'
 ```
 
 List servers:
 
 ```bash
-curl http://localhost:8000/servers/
+curl http://localhost:8000/servers/ \
+  -H "Authorization: Bearer <token>"
 ```
+
+Create a simulation:
+
+```bash
+curl -X POST http://localhost:8000/simulations/ \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "simulation_name": "demo-run",
+    "algorithm": "round_robin",
+    "traffic_waves": [
+      {"wave": 1, "requests": 100, "interval_ms": 50}
+    ]
+  }'
+```
+
+## Notes
+
+- The app expects the frontend to send the JWT in the `Authorization: Bearer ...` header.
+- Server health data is stored separately from the server record and is intended for runtime analytics and metrics.
+- Simulation status and live progress are tracked through the database and WebSocket stream.
+- The backend uses `create_all` during startup and a bootstrap function to seed an admin user when configured.

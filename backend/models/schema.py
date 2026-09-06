@@ -4,19 +4,19 @@ from datetime import datetime
 class ServerCreate(BaseModel):
     name: str
     hostname: Optional[str] = None
-    ip_address: Optional[str] = None
+    ip_address: Optional[str] = "127.0.0.1"
     port: int = 8000
 
     weight: int = 1
     priority: int = 0
 
-    max_connections: Optional[int] = None
-    cpu: Optional[int]= None
-    memory: Optional[int] = None
+    max_connections: Optional[int] = 100
+    cpu: Optional[int] = 2
+    memory: Optional[int] = 64
 
-    region: Optional[str] = None
-    country: Optional[str] = None
-    datacenter: Optional[str] = None
+    region: Optional[str] = "Asia"
+    country: Optional[str] = "India"
+    datacenter: Optional[str] = "Mumbai"
 
     supports_sticky_session: bool = False
 
@@ -135,3 +135,17 @@ class UserOut(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+class BulkServerResult(BaseModel):
+    index: int          # position in the uploaded array, for locating the bad entry
+    name: Optional[str] = None
+    success: bool
+    error: Optional[str] = None
+    server_id: Optional[int] = None
+
+
+class BulkUploadResponse(BaseModel):
+    total: int
+    succeeded: int
+    failed: int
+    results: list[BulkServerResult]

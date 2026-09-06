@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile, File
 from sqlalchemy.orm import Session, joinedload
 
 from services.filter_engine import FilterError, FilterInput, _allowed_ops_for_column, build_filter, describe_model_fields
 from database.database import SessionLocal, get_db
 from models.db_model import Server, ServerHealth, User, UserRole, Simulation
-from models.schema import ServerCreate, ServerUpdate
+from models.schema import ServerCreate, ServerUpdate, BulkServerResult, BulkUploadResponse
 
 from core.logger import logger
 from core.load_balancer import LoadBalancer, build_runtime_servers
@@ -13,7 +13,9 @@ from typing import Dict, List
 from core.auth import get_current_user, require_admin
 from core.rate_limiter import limiter
 
-import httpx
+from pydantic import ValidationError
+
+import json
 
 router = APIRouter(prefix="/servers", tags=["Servers"])
 
@@ -37,6 +39,74 @@ def create_server(request: Request, server: ServerCreate, db: Session = Depends(
         "message": "Server created successfully",
         "server": new_server
     }
+
+@router.post("/bulk-upload", response_model=BulkUploadResponse)
+@limiter.limit("10/minute")
+async def bulk_upload_servers(
+    request: Request,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),  # bulk-adding infrastructure is an admin action, same as single create_server
+):
+    if not file.filename.endswith(".json"):
+        raise HTTPException(status_code=400, detail="File must be a .json file")
+
+    raw = await file.read()
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON: {e}")
+
+    if not isinstance(data, list):
+        raise HTTPException(
+            status_code=400,
+            detail="JSON root must be an array of server objects",
+        )
+
+    results: list[BulkServerResult] = []
+
+    for index, entry in enumerate(data):
+        name = entry.get("name") if isinstance(entry, dict) else None
+        try:
+            # reuse the exact same validation as the single-server create
+            # endpoint, so bulk upload can never create a server that
+            # bypasses rules the manual form enforces
+            validated = ServerCreate(**entry)
+
+            new_server = Server(**validated.dict(), status=True)
+            db.add(new_server)
+            db.flush()  # get new_server.id before commit, for the health row
+
+            health = ServerHealth(server_id=new_server.id)
+            db.add(health)
+            db.commit()
+            db.refresh(new_server)
+
+            results.append(BulkServerResult(
+                index=index, name=new_server.name, success=True, server_id=new_server.id,
+            ))
+        except ValidationError as e:
+            db.rollback()
+            # collapse pydantic's structured error into one readable line
+            first_error = e.errors()[0]
+            field = ".".join(str(p) for p in first_error["loc"])
+            results.append(BulkServerResult(
+                index=index, name=name, success=False,
+                error=f"{field}: {first_error['msg']}",
+            ))
+        except Exception as e:
+            db.rollback()
+            results.append(BulkServerResult(
+                index=index, name=name, success=False, error=str(e),
+            ))
+
+    succeeded = sum(1 for r in results if r.success)
+    return BulkUploadResponse(
+        total=len(data),
+        succeeded=succeeded,
+        failed=len(data) - succeeded,
+        results=results,
+    )
 
 @router.get("/")
 @limiter.limit("60/minute")

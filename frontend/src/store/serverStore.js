@@ -56,12 +56,13 @@ export const useServerStore = create((set, get) => ({
 
   removeServer: async (id) => {
     if (get().servers.length <= 1) return
+    const target = get().servers.find((s) => s.id === id)
     await serverApi.remove(id)
     set((state) => ({ servers: state.servers.filter((s) => s.id !== id) }))
     useToastStore.getState().showToast({
             variant: "warning",
             // title: "Simulation Created",
-            message: `${server.name} deleted successfully.`,
+            message: `${target?.name ?? 'Server'} deleted successfully.`,
         });
   },
 

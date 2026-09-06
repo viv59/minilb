@@ -6,10 +6,8 @@ const ServerUIContext = createContext(null)
 export function ServerUIProvider({ children }) {
   const { servers } = useServers()
   const [selectedId, setSelectedId] = useState(null)
-  const [modal, setModal] = useState(null) // null | 'add' | { type: 'edit', serverId }
+  const [modal, setModal] = useState(null) // null | 'add' | 'bulk-upload' | { type: 'edit', serverId }
 
-  // servers arrives async now (fetched from the backend on mount), so pick
-  // a default selection once it lands instead of at initial render.
   useEffect(() => {
     if (!selectedId && servers.length > 0) setSelectedId(servers[0].id)
   }, [servers, selectedId])
@@ -19,6 +17,7 @@ export function ServerUIProvider({ children }) {
     setSelectedId,
     modal,
     openAddModal: () => setModal('add'),
+    openBulkUploadModal: () => setModal('bulk-upload'),
     openEditModal: (serverId) => setModal({ type: 'edit', serverId }),
     closeModal: () => setModal(null),
   }

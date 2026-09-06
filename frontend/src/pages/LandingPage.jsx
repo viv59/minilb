@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
     Hexagon,
     Server as ServerIcon,
@@ -7,13 +7,17 @@ import {
 } from "lucide-react";
 import Button from "../components/common/Button.jsx";
 import Card from "../components/common/Card.jsx";
-import { ALGORITHM_OPTIONS } from "../utils/algorithms.js"; 
+import { ALGORITHM_OPTIONS } from "../utils/algorithms.js";
 import { FEATURES } from "../utils/constants.js";
 
-// Swap these for your real ALGORITHM_OPTIONS (utils/algorithms.js) if you
-// want the badges to reflect exactly what the app supports.
-
-
+// Status legend colors. Tailwind can't resolve a dynamically built class
+// like `bg-${tone}` at build time — it needs the full literal class string
+// present somewhere in source, so this maps to complete class names instead.
+const STATUS_LEGEND = [
+    { dot: "bg-status-green", label: "Healthy", body: "Serving traffic normally" },
+    { dot: "bg-status-yellow", label: "Maintenance", body: "Deliberately taken offline" },
+    { dot: "bg-status-red", label: "Unhealthy", body: "Failing checks, excluded from routing" },
+];
 
 // Currently unused (HeroDiagram is disabled below) — kept here so it's a
 // one-line uncomment to bring back, rather than rebuilding it later.
@@ -43,10 +47,10 @@ function HeroDiagram() {
                 className="absolute inset-0 h-full w-full motion-reduce:[&_path]:animate-none"
                 fill="none"
             >
-                <path d="M60 130 H180" stroke="rgb(var(--color-border))" strokeWidth="2" strokeDasharray="5 9" className="animate-dash" />
-                <path d="M240 130 C 280 130, 280 55, 320 55" stroke="rgb(var(--color-status-green))" strokeOpacity="0.5" strokeWidth="2" strokeDasharray="5 9" className="animate-dash" />
-                <path d="M240 130 H320" stroke="rgb(var(--color-status-green))" strokeOpacity="0.5" strokeWidth="2" strokeDasharray="5 9" className="animate-dash" />
-                <path d="M240 130 C 280 130, 280 205, 320 205" stroke="rgb(var(--color-status-yellow))" strokeOpacity="0.5" strokeWidth="2" strokeDasharray="5 9" className="animate-dash" />
+                <path d="M60 130 H180" stroke="var(--color-border)" strokeWidth="2" strokeDasharray="5 9" className="animate-dash" />
+                <path d="M240 130 C 280 130, 280 55, 320 55" stroke="var(--color-status-green)" strokeOpacity="0.5" strokeWidth="2" strokeDasharray="5 9" className="animate-dash" />
+                <path d="M240 130 H320" stroke="var(--color-status-green)" strokeOpacity="0.5" strokeWidth="2" strokeDasharray="5 9" className="animate-dash" />
+                <path d="M240 130 C 280 130, 280 205, 320 205" stroke="var(--color-status-yellow)" strokeOpacity="0.5" strokeWidth="2" strokeDasharray="5 9" className="animate-dash" />
             </svg>
 
             <DiagramNode icon={Globe} label="Client" className="left-0 top-1/2 -translate-y-1/2" />
@@ -59,17 +63,22 @@ function HeroDiagram() {
 }
 
 export default function LandingPage() {
+
+    const navigate = useNavigate();
+
     return (
         <div className="min-h-screen bg-app-bg text-app-text">
             {/* Nav */}
             <header className="flex items-center justify-between px-6 py-5 sm:px-10">
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center cursor-pointer gap-2.5" onClick={() => navigate("/")}>
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-app-text">
-                        <Hexagon size={16} className="text-black" />
+                        <Hexagon size={16} className="text-app-bg" />
                     </div>
                     <span className="text-sm font-semibold font-mono tracking-tight">miniLB</span>
                 </div>
-                <Link to="/simulations">
+                {/* NOTE: pointed at /simulation-logs to match the rest of this page's
+                    links — swap to your actual create-simulation route if different. */}
+                <Link to="/simulation-logs">
                     <Button variant="outline" className="text-xs">
                         Start Now!
                     </Button>
@@ -109,13 +118,9 @@ export default function LandingPage() {
             {/* Status legend — same colors the app uses, explained once */}
             <section className="border-y border-app-border-soft bg-app-panel/40">
                 <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-10 gap-y-4 px-6 py-6 sm:px-10">
-                    {[
-                        { tone: "status-green", label: "Healthy", body: "Serving traffic normally" },
-                        { tone: "status-yellow", label: "Maintenance", body: "Deliberately taken offline" },
-                        { tone: "status-red", label: "Unhealthy", body: "Failing checks, excluded from routing" },
-                    ].map((s) => (
+                    {STATUS_LEGEND.map((s) => (
                         <div key={s.label} className="flex items-center gap-2.5">
-                            <span className={`h-2 w-2 rounded-full bg-${s.tone}`} />
+                            <span className={`h-2 w-2 rounded-full ${s.dot}`} />
                             <span className="text-sm font-medium text-app-text">{s.label}</span>
                             <span className="text-xs text-text-faint"> {s.body}</span>
                         </div>
@@ -138,20 +143,30 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* Algorithms */}
+            {/* Algorithms — now real links into the algorithm detail pages,
+                not decorative text */}
             <section className="mx-auto max-w-6xl px-6 pb-16 sm:px-10">
                 <div className="rounded-2xl border border-app-border-soft bg-app-panel p-6">
-                    <div className="text-[11px] uppercase tracking-wide text-text-faint">
-                        Supported algorithms
+                    <div className="flex items-center justify-between">
+                        <div className="text-[11px] uppercase tracking-wide text-text-faint">
+                            Supported algorithms
+                        </div>
+                        <Link
+                            to="/algorithms"
+                            className="text-xs text-text-dim hover:text-app-text hover:underline"
+                        >
+                            Browse all →
+                        </Link>
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
-                        {ALGORITHM_OPTIONS.map((name,i) => (
-                            <span
-                                key={name.label}
-                                className="rounded-full border border-app-border px-3 py-1 font-mono text-[11px] text-text-dim"
+                        {ALGORITHM_OPTIONS.map((algo) => (
+                            <Link
+                                key={algo.value}
+                                to={`/algorithms/${algo.value}`}
+                                className="rounded-full border border-app-border px-3 py-1 font-mono text-[11px] text-text-dim transition hover:border-app-text hover:text-app-text"
                             >
-                                {name.label}
-                            </span>
+                                {algo.label}
+                            </Link>
                         ))}
                     </div>
                 </div>

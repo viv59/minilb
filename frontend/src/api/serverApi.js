@@ -74,4 +74,14 @@ export const serverApi = {
   // filterPayload is a FilterGroup: { logic: "AND", conditions: [{field, operator, value}, ...] }
   filter: (filterPayload) =>
     api.post('/servers/filter', filterPayload).then((r) => (r.data.servers ?? []).map(normalizeServer)),
+
+  bulkUpload: (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api
+      .post('/servers/bulk-upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((r) => r.data)
+  },
 }

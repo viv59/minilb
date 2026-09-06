@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
     LayoutDashboard,
     Server,
@@ -28,6 +28,8 @@ export default function Sidebar() {
     const user = useAuthStore((s) => s.user);
     const logout = useAuthStore((s) => s.logout);
 
+    const navigate = useNavigate();
+
     const visibleNavItems = NAV_ITEMS.filter(
         (item) => !item.adminOnly || isAdmin
     );
@@ -45,7 +47,10 @@ export default function Sidebar() {
         <aside className="flex h-screen w-56 flex-shrink-0 flex-col border-r border-app-border-soft p-3.5">
             
             {/* Logo */}
-            <div className="flex flex-shrink-0 items-center gap-2.5 px-2 pb-5 pt-1.5">
+            <div
+                onClick={() => navigate("/dashboard")}
+                className="flex flex-shrink-0 cursor-pointer items-center gap-2.5 px-2 pb-5 pt-1.5"
+            >
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-app-text">
                     <Hexagon size={16} className="text-app-bg" />
                 </div>

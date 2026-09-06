@@ -1,174 +1,138 @@
-# Frontend Overview
+# minilb frontend
 
-This frontend is a Vite + React application for the mini load balancer dashboard.
-It uses React Router v6, Zustand for state management, Tailwind CSS for styling, and Axios for backend API calls.
+This is the React + Vite dashboard for the mini load balancer application. It is built around a protected auth flow, server inventory management, analytics, and simulation tooling.
+
+## Overview
+
+- SPA built with React 18 and Vite.
+- Uses React Router for navigation and Zustand for state management.
+- Tailwind CSS provides the styling system.
+- Axios handles backend calls, while Zustand stores keep session and feature state in sync.
+- The app supports a public landing page, login/register flow, protected dashboard routes, and simulation pages.
 
 ## Project structure
 
-- `src/main.jsx`
-  - App entrypoint. Renders `<App />` inside `React.StrictMode` and imports global CSS.
+- `src/main.jsx` — app bootstrap, root mount, and global CSS import.
+- `src/App.jsx` — application shell with auth initialization, theme provider, and router provider.
+- `src/routes.jsx` — route configuration for public + protected pages.
+- `src/context/ThemeContext.jsx` — light/dark theme toggle and persistence.
+- `src/context/ServerContext.jsx` — UI modal and server selection helpers.
+- `src/store/authStore.js` — persisted auth token and user session.
+- `src/store/serverStore.js` — server list, filters, and server actions.
+- `src/store/simulationStore.js` — simulation state management.
+- `src/store/settingsStore.js` — theme and default algorithm preferences.
+- `src/hooks/useServers.js`, `useSimulation.js`, `useStatistics.js`, `useTraffic.js` — convenience hooks.
+- `src/api/authApi.js` — login/register/user endpoints.
+- `src/api/serverApi.js` — server list/create/update/filter API wrappers.
+- `src/api/simulationApi.js` — simulation CRUD and lifecycle endpoints.
+- `src/api/statisticsApi.js` — dashboard stat requests.
+- `src/utils/constants.js` — app constants and API base URL.
+- `src/utils/algorithms.js` — algorithm metadata shown in the UI.
 
-- `src/App.jsx`
-  - Root application component.
-  - Fetches servers on mount by calling `useServerStore.getState().fetchServers()`.
-  - Wraps the app with `ThemeProvider` and `ServerUIProvider`.
-  - Renders `RouterProvider` with the app routes.
+## Route map
 
-- `src/routes.jsx`
-  - Defines the client-side routes using `createBrowserRouter`.
-  - Uses `MainLayout` as the layout wrapper.
-  - Routes:
-    - `/` → `Dashboard`
-    - `/servers` → `Servers`
-    - `/algorithms` → `Algorithms`
-    - `/analytics` → `Analytics`
-    - `/settings` → `Settings`
+The app uses `createBrowserRouter` and a protected layout route.
 
-- `src/context/ThemeContext.jsx`
-  - Manages theme state (`dark` / `light`).
-  - Persists theme selection to `localStorage`.
-  - Updates the `document.documentElement` className for theme toggling.
-  - Provides `useTheme()` hook.
+Public routes:
 
-- `src/context/ServerContext.jsx`
-  - Manages UI-specific server state such as the selected server and open modal.
-  - Tracks `selectedId` and `modal` state for add/edit dialogs.
-  - Provides helpers like `openAddModal()`, `openEditModal()`, and `closeModal()`.
-  - Provides `useServerUI()` hook.
+- `/` — `LandingPage`
+- `/login` — `Login`
+- `/register` — `Register`
 
-- `src/store/serverStore.js`
-  - Uses Zustand to manage server state.
-  - Holds server list, loading/error flags, and active algorithm index.
-  - Provides actions:
-    - `fetchServers()` → loads server list from backend.
-    - `addServer(payload)` → creates a new server and updates local state.
-    - `updateServer(id, patch)` → updates a server and updates local state.
-    - `removeServer(id)` → deletes a server and updates local state.
-    - `cycleAlgorithm()` → rotate algorithm index.
-    - `setAlgorithmIndex(index)` → set selected algorithm.
+Protected routes:
 
-- `src/hooks/useServers.js`
-  - Small hook to expose server store state/actions.
-  - Used by pages and components to access server data cleanly.
+- `/dashboard` — `Dashboard`
+- `/servers` — `Servers`
+- `/algorithms` — `Algorithms`
+- `/algorithms/:algoValue` — `AlgorithmDetail`
+- `/analytics` — `Analytics`
+- `/settings` — `Settings`
+- `/simulations` — `Simulations`
+- `/simulation/:simId` — `RunningSimulation`
+- `/simulation-logs` — `SimulationLogsPage`
+- `/simulation-log/:simId` — `SimulationLog`
 
-- `src/api/axios.js`
-  - Configures Axios with a base URL from `VITE_API_BASE_URL` or `http://127.0.0.1:8000`.
-  - Adds a response interceptor for centralized API error logging.
+A catch-all route renders `NotFound` for unknown paths.
 
-- `src/api/serverApi.js`
-  - Wraps backend server API requests.
-  - Normalizes backend response shape into fields used by the UI.
-  - Provides built-in methods for list/create/get/update/remove.
+## Auth flow
 
-- `src/utils/constants.js`
-  - Defines navigation items and icons used by the sidebar.
-  - Defines `API_BASE_URL`.
+The frontend persists only the JWT token in local storage and re-validates it on load:
 
-- `src/utils/algorithms.js`
-  - Defines available load balancing algorithms and descriptions.
-  - Includes a small demo helper `pickRoundRobin()`.
+- `useAuthStore.initialize()` checks the saved token against `/auth/me`.
+- If validation fails, the app clears the stored token and user.
+- `ProtectedRoute` blocks access to protected pages until the session is valid.
 
-## Layout and app shell
+## Server management
 
-- `src/components/layout/MainLayout.jsx`
-  - App shell containing the `Sidebar`, `TopBar`, and main content area.
-  - Uses `<Outlet />` to render the current route content.
+The frontend fetches and updates server data with the Zustand store:
 
-- `src/components/layout/Sidebar.jsx`
-  - Application navigation panel.
-  - Renders links for the app pages.
-  - Shows the currently selected load balancing algorithm and a button to change it.
+- `fetchServers()` loads the list from `/servers/`.
+- `addServer()` posts to `/servers/` and appends the created server.
+- `updateServer()` updates an existing server.
+- `removeServer()` deletes a server record.
+- `applyFilters()` and `fetchFilterFields()` support dynamic filtering based on backend metadata.
 
-- `src/components/layout/TopBar.jsx`
-  - Header bar with system status and a placeholder avatar.
-  - Contains a commented-out add-server button.
+## Simulation flow
 
-## Pages
+The simulation UI lets users:
 
-- `src/pages/Dashboard.jsx`
-  - Main overview page.
-  - Loads server state with `useServers()`.
-  - Renders the `NetworkDiagram` and optionally other widgets.
-  - Shows a loading or error message if server data is not available.
+- create a named simulation with a chosen algorithm and traffic wave definition,
+- start it through the backend,
+- watch progress in a dedicated running page,
+- view stored logs and duplicate existing runs.
 
-- `src/pages/Servers.jsx`
-  - Renders a list of `ServerCard` components.
-  - Includes `AddServerModal` and `EditServerModal` for server CRUD.
+The relevant API client is in `src/api/simulationApi.js` and the simulation page state is managed via `useSimulation()`.
 
-- `src/pages/Algorithms.jsx`
-  - Displays algorithm cards based on `ALGORITHMS`.
-  - Uses `useServerStore()` to read and update the active algorithm.
+## Environment and config
 
-- `src/pages/Analytics.jsx`
-  - Renders analytics widgets like `TrafficDonut` and `HealthSummary`.
-  - Uses `useTraffic()` hook to compute traffic distribution.
-
-- `src/pages/Settings.jsx`
-  - Provides appearance settings.
-  - Uses `useTheme()` to toggle dark/light mode.
-
-## Shared UI components
-
-- `src/components/common/Card.jsx`
-  - Generic card wrapper used throughout the UI.
-
-- `src/components/common/Button.jsx`
-  - Button component with style variants.
-
-- `src/components/common/Modal.jsx`
-  - Modal dialog wrapper used by add/edit server forms.
-
-- `src/components/common/Loader.jsx`
-  - Loading spinner used on the Dashboard.
-
-## Server management components
-
-- `src/components/servers/ServerCard.jsx`
-  - Displays server details and action buttons.
-  - Used by the `/servers` page.
-
-- `src/components/servers/AddServerModal.jsx`
-  - Modal form for adding a new server.
-  - Calls `addServer()` from the shared server store.
-  - Uses `ServerUIContext` to open/close and manage modal state.
-
-- `src/components/servers/EditServerModal.jsx`
-  - Modal form for editing an existing server.
-  - Pre-fills values from the selected server.
-  - Calls `updateServer()` from the shared server store.
-
-## Styles
-
-- `src/styles/globals.css`
-  - Global CSS imports and base styling.
-
-- `src/styles/variables.css`
-  - CSS custom properties used by Tailwind and the app.
-
-- `src/styles/animations.css`
-  - Animation utilities for UI elements.
-
-## Running the frontend
-
-1. Install dependencies:
+The frontend expects the backend to be available at:
 
 ```bash
-cd frontend
-npm install
+VITE_API_BASE_URL=http://127.0.0.1:8000
 ```
 
-2. Start local dev server:
+If that variable is missing, the Axios client falls back to:
 
 ```bash
+http://127.0.0.1:8000
+```
+
+## Install and run
+
+From the frontend directory:
+
+```bash
+npm install
 npm run dev
 ```
 
-3. Open the app in the browser.
+Then open the app in the browser using the local Vite URL, usually:
+
+```bash
+http://localhost:5173
+```
+
+## Build
+
+```bash
+npm run build
+```
+
+This creates a production build in the `dist/` folder.
+
+## Styling and UI notes
+
+- Tailwind CSS is configured through `tailwind.config.js` and Vite.
+- Global styles live under `src/styles/`.
+- `ThemeContext` toggles dark/light mode by updating the HTML root class.
+- Shared UI primitives such as `Card`, `Button`, `Modal`, and `Loader` are reused across pages.
+
+## Data contracts
+
+The client normalizes backend responses in `src/api/serverApi.js` before using them in the UI. This keeps the front-end tolerant of small server payload variations while still exposing a consistent shape to components.
 
 ## Notes
 
-- The frontend is primarily a dashboard shell connected to a FastAPI backend.
-- Data is fetched from the backend using Axios and stored in Zustand.
-- UI state (modal visibility, selected server) is managed with React context.
-- Routing is handled by React Router and `MainLayout` provides the shared frame.
-- The `Algorithms` page updates the selected algorithm state, but a real load-balancing implementation must be enforced by the backend.
+- Authentication is required for most of the app; the landing page is the only public entry point.
+- The algorithm selection is represented in the frontend state and UI, but the actual load-balancing behavior is enforced by the backend runtime and simulation engine.
+- Most application state is kept in Zustand stores, while UI-only state such as modal visibility is managed through `ServerContext`.

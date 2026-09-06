@@ -31,7 +31,7 @@ function StatusDot({ status }) {
 export default function SimulationLogsPage() {
     const navigate = useNavigate();
     const {
-        simulations,
+        simulations: simulationData,
         fetchSimulations,
         removeSimulation,
         duplicateSimulation,
@@ -39,6 +39,8 @@ export default function SimulationLogsPage() {
         error,
         startSimulation,
     } = useSimulation();
+
+    const simulations = Array.isArray(simulationData) ? simulationData : []
 
     const [searchTerm, setSearchTerm] = useState("");
     const [page, setPage] = useState(1);
@@ -115,7 +117,7 @@ export default function SimulationLogsPage() {
                 <div className="py-4 text-sm text-status-red">{error}</div>
             ) : simulations.length === 0 ? (
                 <div className="py-12 text-center text-sm text-text-dim">
-                    No completed simulations
+                    No simulations available
                 </div>
             ) : filteredSimulations.length === 0 ? (
                 <div className="py-12 text-center text-sm text-text-dim">
